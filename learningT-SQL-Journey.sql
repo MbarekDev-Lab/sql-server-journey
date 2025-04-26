@@ -50,4 +50,54 @@ WHERE EXISTS (
 );
 
 
+-- OVER 
+
+
+SELECT e.EmployeeNumber,
+  YEAR(AttendanceMonth) AS AttendanceYear, 
+  SUM(a.NumberAttendance) OVER() AS GrandTotalAttendance
+FROM tblEmployee AS e JOIN tblAttendance AS a ON e.EmployeeNumber = a.EmployeeNumber
+--GROUP BY e.EmployeeNumber,  YEAR(AttendanceMonth);
+
+SELECT e.EmployeeNumber,
+  YEAR(AttendanceMonth) AS AttendanceYear, 
+  SUM(a.NumberAttendance)  AS GrandTotalAttendance
+FROM tblEmployee AS e JOIN tblAttendance AS a ON e.EmployeeNumber = a.EmployeeNumber
+GROUP BY e.EmployeeNumber,  YEAR(AttendanceMonth);
+
+
+ -- GROUP BY vs OVER()
+SELECT EmployeeNumber, SUM(NumberAttendance) AS  TotalCompanyAttendance
+FROM  tblAttendance
+GROUP BY  EmployeeNumber;
+
+SELECT EmployeeNumber, AttendanceMonth,NumberAttendance,
+  SUM(NumberAttendance) OVER(PARTITION BY EmployeeNumber) AS TotalCompanyAttendance
+FROM tblAttendance;
+
+SELECT EmployeeNumber, AttendanceMonth,NumberAttendance,
+  SUM(NumberAttendance) OVER() AS TotalCompanyAttendance
+FROM tblAttendance;
+
+select A.EmployeeNumber, A.AttendanceMonth, A.NumberAttendance,sum(A.NumberAttendance) over() as TotalAttendance,
+convert(decimal(18,7),A.NumberAttendance) / sum(A.NumberAttendance) over() * 100.0000 as PercentageAttendance
+from tblEmployee as E join tblAttendance as A
+on E.EmployeeNumber = A.EmployeeNumber
+
+select sum(NumberAttendance) from tblAttendance;
+
+
+--mixing window functions after GROUP BY,
+--like in a CTE (Common Table Expression)
+WITH AttendancePerEmployee AS (
+    SELECT EmployeeNumber, YEAR(AttendanceMonth) AS Year,
+        SUM(NumberAttendance) AS TotalAttendance
+    FROM tblAttendance
+    GROUP BY EmployeeNumber, YEAR(AttendanceMonth)
+)
+SELECT EmployeeNumber, Year, TotalAttendance,
+    SUM(TotalAttendance) OVER() AS GrandTotal
+FROM AttendancePerEmployee;
+
+
 
