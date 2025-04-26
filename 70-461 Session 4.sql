@@ -2,7 +2,6 @@ USE 70-46
 GO  
 
  select * FROM Employees
-
 --2. UNION and UNION all select * from inserted
 --union
 --select * from deleted

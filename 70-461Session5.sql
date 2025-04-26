@@ -11,6 +11,8 @@ on E.EmployeeNumber = A.EmployeeNumber
 
 select sum(NumberAttendance) from tblAttendance
 
+
+
 --4. Partition by and Order by
 select A.EmployeeNumber, A.AttendanceMonth,
 
