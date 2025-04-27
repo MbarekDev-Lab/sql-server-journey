@@ -154,8 +154,6 @@ VALUES
     (102, '2024-02-20', 700.00),
     (103, '2024-01-20', 200.00);
 
-
-
 --Query for Cumulative Sales Per Employee, per Year
 SELECT 
   s.EmployeeNumber,
@@ -169,6 +167,42 @@ SELECT
   ) AS CumulativeSales
 FROM tblSales AS s
 ORDER BY s.EmployeeNumber, s.SaleDate;
+
+-- Range versus Rows
+SELECT 
+    A.EmployeeNumber, 
+    A.AttendanceMonth, 
+    A.NumberAttendance,
+    SUM(A.NumberAttendance) 
+    OVER (
+        PARTITION BY A.EmployeeNumber, YEAR(A.AttendanceMonth) 
+        ORDER BY A.AttendanceMonth 
+        ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+    ) AS RowsTotal,
+
+    SUM(A.NumberAttendance) 
+    OVER (
+        PARTITION BY A.EmployeeNumber, YEAR(A.AttendanceMonth) 
+        ORDER BY A.AttendanceMonth 
+        RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+    ) AS RangeTotal
+
+FROM tblEmployee AS E 
+JOIN (
+    SELECT * FROM tblAttendance
+    UNION ALL
+    SELECT * FROM tblAttendance
+) AS A
+ON E.EmployeeNumber = A.EmployeeNumber
+ORDER BY A.EmployeeNumber, A.AttendanceMonth
+
+--where A.AttendanceMonth < '20150101'
+--order by A.EmployeeNumber, A.AttendanceMonth
+
+--unbounded preceding and current row
+--current row and unbounded following
+--unbounded preceding and unbounded following - RANGE and ROWS
+
 
 
 
