@@ -203,6 +203,36 @@ ORDER BY A.EmployeeNumber, A.AttendanceMonth
 --current row and unbounded following
 --unbounded preceding and unbounded following - RANGE and ROWS
 
+-- Omitting Range/Row
+SELECT 
+    A.EmployeeNumber, 
+    A.AttendanceMonth, 
+    A.NumberAttendance,
+    SUM(A.NumberAttendance) OVER() AS TotalAttendance
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A
+ON E.EmployeeNumber = A.EmployeeNumber;
+
+select sum(NumberAttendance) from tblAttendance
+
+SELECT 
+    A.EmployeeNumber, 
+    A.AttendanceMonth, 
+    A.NumberAttendance,
+    SUM(A.NumberAttendance) OVER(
+        PARTITION BY E.EmployeeNumber, YEAR(A.AttendanceMonth)
+        ORDER BY A.AttendanceMonth
+    ) AS SumAttendance
+FROM tblEmployee AS E 
+JOIN (SELECT * FROM tblAttendance UNION ALL SELECT * FROM tblAttendance) AS A
+ON E.EmployeeNumber = A.EmployeeNumber
+ORDER BY A.EmployeeNumber, A.AttendanceMonth;
+
+--range between unbounded preceding and unbounded following - DEFAULT where there is no ORDER BY
+--range between unbounded preceding and current row         - DEFAULT where there IS an ORDER BY
+
+
+
 
 
 
