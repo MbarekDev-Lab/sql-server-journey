@@ -125,6 +125,58 @@ ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) as RollingTotal
 from tblEmployee as E join tblAttendance as A
 on  E.EmployeeNumber =  A.EmployeeNumber
 
+--Current Row and Unbounded
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth, 
+  A.NumberAttendance, 
+  SUM(A.NumberAttendance) OVER(
+    PARTITION BY E.EmployeeNumber 
+    ORDER BY A.AttendanceMonth 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS RollingTotal
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A
+ON E.EmployeeNumber = A.EmployeeNumber;
+
+CREATE TABLE tblSales (
+    SaleID INT PRIMARY KEY IDENTITY(1,1),
+    EmployeeNumber INT NOT NULL,          
+    SaleDate DATE NOT NULL,               
+    SaleAmount DECIMAL(10, 2) NOT NULL     
+);
+INSERT INTO tblSales (EmployeeNumber, SaleDate, SaleAmount)
+VALUES
+    (101, '2024-01-10', 500.00),
+    (101, '2024-02-05', 600.00),
+    (101, '2024-03-15', 300.00),
+    (102, '2024-01-12', 400.00),
+    (102, '2024-02-20', 700.00),
+    (103, '2024-01-20', 200.00);
+
+
+
+--Query for Cumulative Sales Per Employee, per Year
+SELECT 
+  s.EmployeeNumber,
+  YEAR(s.SaleDate) AS SaleYear,
+  s.SaleDate,
+  s.SaleAmount,
+  SUM(s.SaleAmount) OVER (
+    PARTITION BY s.EmployeeNumber, YEAR(s.SaleDate) 
+    ORDER BY s.SaleDate 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  ) AS CumulativeSales
+FROM tblSales AS s
+ORDER BY s.EmployeeNumber, s.SaleDate;
+
+
+
+
+
+
+
+
 
 
 
