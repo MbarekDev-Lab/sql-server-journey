@@ -203,15 +203,47 @@ ORDER BY A.EmployeeNumber, A.AttendanceMonth
 --current row and unbounded following
 --unbounded preceding and unbounded following - RANGE and ROWS
 
+ALTER TABLE tblSales
+ADD CustomerID INT;
+
+UPDATE tblSales
+SET CustomerID = CASE 
+    WHEN SaleID = 1 THEN 101
+    WHEN SaleID = 2 THEN 102
+    WHEN SaleID = 3 THEN 103
+    WHEN SaleID = 4 THEN 101
+    WHEN SaleID = 5 THEN 104
+END;
+
+SELECT * FROM tblSales;
+
+-- ROWS when -> row-by-row calculations.
+-- RANGE when -> value-based grouping calculations.
+SELECT SaleID, SaleDate, CustomerID, SaleAmount,
+SUM(SaleAmount) OVER (ORDER BY SaleAmount 
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal_ROWS
+FROM tblSales;
+
+SELECT SaleID, SaleDate, CustomerID, SaleAmount,
+SUM(SaleAmount) OVER (ORDER BY SaleAmount 
+RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal_RANGE
+FROM tblSales;
+
 -- Omitting Range/Row
 SELECT 
     A.EmployeeNumber, 
     A.AttendanceMonth, 
     A.NumberAttendance,
-    SUM(A.NumberAttendance) OVER() AS TotalAttendance
+    SUM(A.NumberAttendance) 
+    OVER(
+        PARTITION BY E.EmployeeNumber, YEAR(A.AttendanceMonth)
+        ORDER BY A.AttendanceMonth  -- Window frame with ROWS or RANGE must have an ORDER BY clause.
+        RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+    ) AS TotalAttendance
 FROM tblEmployee AS E 
 JOIN tblAttendance AS A
 ON E.EmployeeNumber = A.EmployeeNumber;
+
 
 select sum(NumberAttendance) from tblAttendance
 
@@ -228,8 +260,8 @@ JOIN (SELECT * FROM tblAttendance UNION ALL SELECT * FROM tblAttendance) AS A
 ON E.EmployeeNumber = A.EmployeeNumber
 ORDER BY A.EmployeeNumber, A.AttendanceMonth;
 
---range between unbounded preceding and unbounded following - DEFAULT where there is no ORDER BY
---range between unbounded preceding and current row         - DEFAULT where there IS an ORDER BY
+--range between unbounded preceding and unbounded following  - DEFAULT where there is no ORDER BY
+--rows/range between unbounded preceding and current row     - DEFAULT where there IS an ORDER BY
 
 
 
