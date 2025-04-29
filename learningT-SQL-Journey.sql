@@ -337,3 +337,12 @@ ON
 
 WHERE 
   A.AttendanceMonth < '2015-05-01'
+
+  -- test 
+SELECT 
+  EmployeeID,
+  Salary,
+  RANK() OVER(ORDER BY Salary DESC) AS SalaryRank
+FROM Employees;
+
+
