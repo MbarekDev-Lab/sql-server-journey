@@ -263,6 +263,50 @@ ORDER BY A.EmployeeNumber, A.AttendanceMonth;
 --range between unbounded preceding and unbounded following  - DEFAULT where there is no ORDER BY
 --rows/range between unbounded preceding and current row     - DEFAULT where there IS an ORDER BY
 
+SELECT 
+    EmployeeNumber, 
+    DateOfTransaction, 
+    Amount,
+    SUM(Amount) OVER(PARTITION BY EmployeeNumber ORDER BY DateOfTransaction) AS TotalAmount
+FROM dbo.tblTransaction;
+
+-- ROW_NUMBER (Transact-SQL)
+
+SELECT 
+    E.EmployeeNumber, A.AttendanceMonth, 
+	ROW_NUMBER() OVER(PARTITION BY A.EmployeeNumber ORDER BY A.EmployeeNumber , A.AttendanceMonth) AS TheRowNumber
+FROM tblEmployee AS E JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+
+
+-- No PARTITION BY.
+SELECT A.EmployeeNumber, A.AttendanceMonth,  
+A.NumberAttendance,  
+ROW_NUMBER() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheRowNumber, --always continues without gaps
+RANK() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheRank, --gaps happen.
+DENSE_RANK() OVER(ORDER BY E.EmployeeNumber, A.AttendanceMonth) as TheDenseRank --No gaps even if tied.
+from tblEmployee as E 
+join (Select * from tblAttendance union all select * from tblAttendance) as A 
+ON E.EmployeeNumber = A.EmployeeNumber
+
+
+--Now PARTITION BY EmployeeNumber.
+SELECT A.EmployeeNumber, A.AttendanceMonth,  
+A.NumberAttendance,  
+ROW_NUMBER() OVER(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) as TheRowNumber, 
+RANK()       OVER(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) as TheRank, 
+DENSE_RANK() OVER(PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) as TheDenseRank
+from tblEmployee as E 
+join (Select * from tblAttendance union all select * from tblAttendance) as A 
+ON E.EmployeeNumber = A.EmployeeNumber
+
+
+-- selects all columns from tblAttendance no specific order (since (select null)
+SELECT *, row_number() over(order by (select null)) from tblAttendance  
+
+
+
+
+
 
 
 
