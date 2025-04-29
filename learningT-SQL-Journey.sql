@@ -299,30 +299,41 @@ from tblEmployee as E
 join (Select * from tblAttendance union all select * from tblAttendance) as A 
 ON E.EmployeeNumber = A.EmployeeNumber
 
-
 -- selects all columns from tblAttendance no specific order (since (select null)
 SELECT *, row_number() over(order by (select null)) from tblAttendance  
 
 
+-- NTILE 
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,  
+  A.NumberAttendance,  
+  -- 1. Automatically splits rows into 10 equal groups (tiles) for each Employee
+  NTILE(10) OVER(
+      PARTITION BY E.EmployeeNumber 
+      ORDER BY A.AttendanceMonth
+  ) AS TheNTile,
 
+  -- 2. Manually calculates the same 10 groups
+  CONVERT(INT, (
+      (ROW_NUMBER() OVER(
+           PARTITION BY E.EmployeeNumber 
+           ORDER BY A.AttendanceMonth
+       ) - 1)
+      /
+      (COUNT(*) OVER(
+           PARTITION BY E.EmployeeNumber 
+           ORDER BY A.AttendanceMonth 
+           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+       ) / 10.0)
+  ) + 1) AS MyNTile
 
+FROM 
+  tblEmployee AS E 
+JOIN 
+  tblAttendance AS A 
+ON 
+  E.EmployeeNumber = A.EmployeeNumber
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+WHERE 
+  A.AttendanceMonth < '2015-05-01'
