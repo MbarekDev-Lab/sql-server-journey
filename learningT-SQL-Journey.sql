@@ -389,3 +389,33 @@ SELECT *
 FROM AttendanceRanked
 WHERE rn = 2; -- emulate NTH_VALUE() using ROW_NUMBER() and a CTE
 
+--LAG and LEAD
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,
+  A.NumberAttendance,
+
+  LAG(NumberAttendance, 1,999) OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyLag,
+
+  LEAD(NumberAttendance, 1,999) OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyLead,
+
+  NumberAttendance - LAG(NumberAttendance, 1,999) OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyDiff,
+
+    NumberAttendance - LEAD(NumberAttendance, 1,999) OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyDiff
+
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A 
+  ON E.EmployeeNumber = A.EmployeeNumber
+
+
+
+
+
