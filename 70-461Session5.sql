@@ -291,7 +291,7 @@ from tblEmployee as E join tblAttendance as A
 
     on E.EmployeeNumber = A.EmployeeNumber
 
-13. CUME_DIST and PERCENT_RANK
+-- 13. CUME_DIST and PERCENT_RANK
 select A.EmployeeNumber, A.AttendanceMonth,
 
     A.NumberAttendance,
@@ -316,7 +316,8 @@ from tblEmployee as E join tblAttendance as A
 
     on E.EmployeeNumber = A.EmployeeNumber
 
-14. PERCENTILE_CONT and PERCENTILE_DISC
+
+--14. PERCENTILE_CONT and PERCENTILE_DISC
 select A.EmployeeNumber, A.AttendanceMonth,
 
     A.NumberAttendance,

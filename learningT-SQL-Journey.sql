@@ -416,6 +416,35 @@ JOIN tblAttendance AS A
   ON E.EmployeeNumber = A.EmployeeNumber
 
 
+--PERCENTILE_CONT and PERCENTILE_DISC
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,
+  A.NumberAttendance,
+
+  -- Built-in cumulative distribution
+  CUME_DIST() OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyCume_Dist,
+
+  -- Built-in percent rank
+  PERCENT_RANK() OVER (
+    PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
+  ) AS MyPercent_Rank,
+
+  -- Manual CUME_DIST = ROW_NUMBER / COUNT
+  CAST(ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) AS DECIMAL(9,5)) /
+  COUNT(*) OVER (PARTITION BY E.EmployeeNumber) AS CalcCume_Dist,
+
+  -- Manual PERCENT_RANK = (ROW_NUMBER - 1) / (COUNT - 1)
+  CAST(ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) - 1 AS DECIMAL(9,5)) /
+  (COUNT(*) OVER (PARTITION BY E.EmployeeNumber) - 1) AS CalcPercent_Rank
+
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A 
+  ON E.EmployeeNumber = A.EmployeeNumber
+
+
 
 
 
