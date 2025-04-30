@@ -313,7 +313,6 @@ SELECT
       PARTITION BY E.EmployeeNumber 
       ORDER BY A.AttendanceMonth
   ) AS TheNTile,
-
   -- 2. Manually calculates the same 10 groups
   CONVERT(INT, (
       (ROW_NUMBER() OVER(
@@ -327,22 +326,66 @@ SELECT
            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
        ) / 10.0)
   ) + 1) AS MyNTile
-
-FROM 
-  tblEmployee AS E 
-JOIN 
-  tblAttendance AS A 
-ON 
-  E.EmployeeNumber = A.EmployeeNumber
-
-WHERE 
-  A.AttendanceMonth < '2015-05-01'
+FROM tblEmployee AS E 
+JOIN  tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+WHERE A.AttendanceMonth < '2015-05-01'
 
   -- test 
-SELECT 
-  EmployeeID,
-  Salary,
-  RANK() OVER(ORDER BY Salary DESC) AS SalaryRank
+SELECT EmployeeID, Salary,
+	RANK() OVER(ORDER BY Salary DESC) AS SalaryRank
 FROM Employees;
 
+
+--FIRST_VALUE and LAST_VALUE
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,
+  A.NumberAttendance,
+  FIRST_VALUE(NumberAttendance)
+  OVER(PARTITION BY E.EmployeeNumber 
+       ORDER BY A.AttendanceMonth) AS FirstMonth,
+
+  LAST_VALUE(NumberAttendance)
+  OVER(PARTITION BY E.EmployeeNumber 
+       ORDER BY A.AttendanceMonth
+       ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS LastMonth
+
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A 
+  ON E.EmployeeNumber = A.EmployeeNumber
+
+
+  --using a WINDOW clause instead of repeating the OVER(...)clause 
+SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,
+  A.NumberAttendance,
+
+  FIRST_VALUE(NumberAttendance) OVER attendance_window AS FirstMonth, --Attendance value of the first month per employee
+  LAST_VALUE(NumberAttendance)  OVER attendance_window AS LastMonth  --Attendance value of the last month per employee
+  --NTH_VALUE(NumberAttendance, 2) OVER attendance_window AS SecondValue --Attendance value of the second month per employee
+
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A 
+  ON E.EmployeeNumber = A.EmployeeNumber
+
+WINDOW attendance_window AS (
+  PARTITION BY E.EmployeeNumber 
+  ORDER BY A.AttendanceMonth
+  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+);
+
+WITH AttendanceRanked AS (
+  SELECT 
+    A.EmployeeNumber,
+    A.AttendanceMonth,
+    A.NumberAttendance,
+    ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) AS rn
+  FROM tblEmployee AS E
+  JOIN tblAttendance AS A
+    ON E.EmployeeNumber = A.EmployeeNumber
+)
+SELECT * 
+FROM AttendanceRanked
+WHERE rn = 2; -- emulate NTH_VALUE() using ROW_NUMBER() and a CTE
 
