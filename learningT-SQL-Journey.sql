@@ -439,6 +439,34 @@ FROM tblEmployee AS E
 JOIN tblAttendance AS A 
   ON E.EmployeeNumber = A.EmployeeNumber
 
+  SELECT 
+  A.EmployeeNumber, 
+  A.AttendanceMonth,
+  A.NumberAttendance,
+
+  FIRST_VALUE(NumberAttendance) OVER (
+    PARTITION BY E.EmployeeNumber 
+    ORDER BY A.AttendanceMonth 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  ) AS FirstMonth,
+
+  LAST_VALUE(NumberAttendance) OVER (
+    PARTITION BY E.EmployeeNumber 
+    ORDER BY A.AttendanceMonth 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  ) AS LastMonth,
+
+  NTH_VALUE(NumberAttendance, 2) OVER (
+    PARTITION BY E.EmployeeNumber 
+    ORDER BY A.AttendanceMonth 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  ) AS SecondValue
+
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A 
+  ON E.EmployeeNumber = A.EmployeeNumber;
+
+
 
 
 
