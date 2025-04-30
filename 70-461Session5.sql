@@ -342,7 +342,7 @@ SELECT DISTINCT EmployeeNumber,
 
 from tblAttendance
 
-15. Adding Totals
+--15. Adding Totals
     select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance
 
     from tblEmployee as E join tblAttendance as A

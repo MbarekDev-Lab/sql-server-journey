@@ -421,25 +421,20 @@ SELECT
   A.EmployeeNumber, 
   A.AttendanceMonth,
   A.NumberAttendance,
-
   -- Built-in cumulative distribution
   CUME_DIST() OVER (
     PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
-  ) AS MyCume_Dist,
-
+  ) AS MyCume_Dist,--Shows the cumulative distribution: the proportion of rows less than or equal to the current row. Range: (0, 1].
   -- Built-in percent rank
   PERCENT_RANK() OVER (
     PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth
-  ) AS MyPercent_Rank,
-
+  ) AS MyPercent_Rank, --Shows the relative rank of a row among all rows. First row = 0. Last row = 1. Range: [0, 1].
   -- Manual CUME_DIST = ROW_NUMBER / COUNT
-  CAST(ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) AS DECIMAL(9,5)) /
+  CAST(ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) AS DECIMAL(9,5)) /--Assigns unique sequential numbers to rows per partition.
   COUNT(*) OVER (PARTITION BY E.EmployeeNumber) AS CalcCume_Dist,
-
   -- Manual PERCENT_RANK = (ROW_NUMBER - 1) / (COUNT - 1)
   CAST(ROW_NUMBER() OVER (PARTITION BY E.EmployeeNumber ORDER BY A.AttendanceMonth) - 1 AS DECIMAL(9,5)) /
-  (COUNT(*) OVER (PARTITION BY E.EmployeeNumber) - 1) AS CalcPercent_Rank
-
+  (COUNT(*) OVER (PARTITION BY E.EmployeeNumber) - 1) AS CalcPercent_Rank --Total rows per partition (i.e., per Employee).
 FROM tblEmployee AS E 
 JOIN tblAttendance AS A 
   ON E.EmployeeNumber = A.EmployeeNumber
