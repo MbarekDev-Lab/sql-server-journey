@@ -540,6 +540,40 @@ FROM
 WHERE 
     cume_dist_percentage <= 30.0;
 
+SELECT 
+    EmployeeNumber, 
+    DateOfTransaction, 
+    Amount,
+  --  LAST_VALUE(Amount) OVER (
+  --      PARTITION BY EmployeeNumber 
+  --      ORDER BY DateOfTransaction
+  --      -- No ROWS or RANGE clause
+		--RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+  --  ) AS TotalAmount
+  --Correct Usage
+  LAST_VALUE(Amount) OVER (
+    PARTITION BY EmployeeNumber 
+    ORDER BY DateOfTransaction DESC
+    --RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+	RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+) AS TotalAmount
+FROM dbo.tblTransaction;
+
+--The order of arguments for both LAG() and LEAD() functions in T-SQL
+SELECT 
+    Employees.DepartmentID
+    Salary,
+    LAG(Salary, 1, 0) OVER (PARTITION BY DepartmentID ORDER BY Salary) AS PreviousSalary,
+    LEAD(Salary, 1, 0) OVER (PARTITION BY DepartmentID ORDER BY Salary) AS NextSalary
+FROM Employees;
+
+SELECT POWER(4, 3) AS Result1;
+SELECT FLOOR(PI()) AS Result2;
+SELECT CEILING(PI()) AS Result3;
+
+
+
+
 
 
 
