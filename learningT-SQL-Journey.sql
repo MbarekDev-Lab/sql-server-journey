@@ -443,29 +443,102 @@ JOIN tblAttendance AS A
   A.EmployeeNumber, 
   A.AttendanceMonth,
   A.NumberAttendance,
-
   FIRST_VALUE(NumberAttendance) OVER (
     PARTITION BY E.EmployeeNumber 
     ORDER BY A.AttendanceMonth 
     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
   ) AS FirstMonth,
-
   LAST_VALUE(NumberAttendance) OVER (
     PARTITION BY E.EmployeeNumber 
     ORDER BY A.AttendanceMonth 
     ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-  ) AS LastMonth,
-
-  NTH_VALUE(NumberAttendance, 2) OVER (
-    PARTITION BY E.EmployeeNumber 
-    ORDER BY A.AttendanceMonth 
-    ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-  ) AS SecondValue
-
+  ) AS LastMonth
+  --NTH_VALUE(NumberAttendance, 2) OVER (
+  --  PARTITION BY E.EmployeeNumber 
+  --  ORDER BY A.AttendanceMonth 
+  --  ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+  --) AS SecondValue
 FROM tblEmployee AS E 
 JOIN tblAttendance AS A 
   ON E.EmployeeNumber = A.EmployeeNumber;
+ 
 
+-- 1. Adding Totals Detail: Attendance by Department, Employee, and Month
+SELECT 
+    E.Department, 
+    E.EmployeeNumber, 
+    A.AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance
+FROM 
+    tblEmployee AS E
+JOIN 
+    tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY 
+    E.Department, E.EmployeeNumber, A.AttendanceMonth
+UNION
+
+-- 2. Subtotal: Total Attendance per Employee (no month)
+SELECT 
+    E.Department, 
+    E.EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance
+FROM 
+    tblEmployee AS E
+JOIN 
+    tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY 
+    E.Department, E.EmployeeNumber
+
+UNION
+
+-- 3. Subtotal: Total Attendance per Department (no employee, no month)
+SELECT 
+    E.Department, 
+    NULL AS EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance
+FROM 
+    tblEmployee AS E
+JOIN 
+    tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY 
+    E.Department
+
+UNION
+
+-- 4. Grand Total: Overall Attendance (no department, employee, or month)
+SELECT 
+    NULL AS Department, 
+    NULL AS EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance
+FROM 
+    tblEmployee AS E
+JOIN 
+    tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+ORDER BY 
+    Department, EmployeeNumber, AttendanceMonth;
+
+SELECT DISTINCT EmployeeNumber,
+    PERCENTILE_CONT(0.4) WITHIN GROUP (ORDER BY NumberAttendance)
+        OVER (PARTITION BY EmployeeNumber) AS AverageCont,
+    PERCENTILE_DISC(0.4) WITHIN GROUP (ORDER BY NumberAttendance)
+        OVER (PARTITION BY EmployeeNumber) AS AverageDisc
+FROM tblAttendance;
+
+
+WITH ProductWithCumeDist AS (
+    SELECT  EmployeeNumber,
+        CUME_DIST() OVER (ORDER BY EmployeeNumber DESC) * 100.0 AS cume_dist_percentage
+    FROM  tblAttendance
+)
+SELECT  EmployeeNumber,
+    CAST(ROUND(cume_dist_percentage, 2) AS VARCHAR) + '%' AS cume_dist_percentage
+FROM 
+    ProductWithCumeDist
+WHERE 
+    cume_dist_percentage <= 30.0;
 
 
 

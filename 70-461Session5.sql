@@ -318,9 +318,7 @@ from tblEmployee as E join tblAttendance as A
 
 
 --14. PERCENTILE_CONT and PERCENTILE_DISC
-select A.EmployeeNumber, A.AttendanceMonth,
-
-    A.NumberAttendance,
+select A.EmployeeNumber, A.AttendanceMonth, A.NumberAttendance, 
 
     CUME_DIST() over(partition by E.EmployeeNumber
 
@@ -342,7 +340,7 @@ SELECT DISTINCT EmployeeNumber,
 
 from tblAttendance
 
---15. Adding Totals
+-- 15. Adding Totals
     select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance
 
     from tblEmployee as E join tblAttendance as A
@@ -398,7 +396,7 @@ group by ROLLUP (E.Department, E.EmployeeNumber, A.AttendanceMonth)
 
 order by Department, EmployeeNumber, AttendanceMonth
 
-17. GROUPING SETS
+--17. GROUPING SETS
 select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance,
 
     GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
@@ -431,7 +429,7 @@ CASE WHEN E.EmployeeNumber IS NULL THEN 1 ELSE 0 END, E.EmployeeNumber,
 
 CASE WHEN AttendanceMonth IS NULL THEN 1 ELSE 0 END, AttendanceMonth
 
-19. Geometry � Creating Point
+--19. Geometry � Creating Point
 BEGIN TRAN
 
 CREATE TABLE tblGeom
@@ -460,7 +458,7 @@ from tblGeom
 
 ROLLBACK TRAN
 
-20. Queries Points
+--20. Queries Points
 begin tran
 
 create table tblGeom
