@@ -627,3 +627,24 @@ ORDER BY
     EmployeeNumber, 
     AttendanceMonth;
 
+
+-- ROLLUP replaces multiple UNION queries
+SELECT 
+  E.Department, 
+  E.EmployeeNumber, 
+  A.AttendanceMonth,
+  SUM(A.NumberAttendance) AS NumberAttendance,
+
+  GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy, -- tells if EmployeeNumber was NULL due to ROLLUP
+  GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) AS EmployeeNumberGroupedID -- helps identify row type
+
+FROM tblEmployee AS E
+JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+
+GROUP BY ROLLUP (E.Department, E.EmployeeNumber, A.AttendanceMonth)
+ORDER BY Department, EmployeeNumber, AttendanceMonth;
+
+
+
+
+ 
