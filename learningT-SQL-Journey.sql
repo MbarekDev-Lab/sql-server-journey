@@ -572,9 +572,58 @@ SELECT FLOOR(PI()) AS Result2;
 SELECT CEILING(PI()) AS Result3;
 
 
+-- Monthly attendance per employee
+SELECT 
+    E.Department, 
+    E.EmployeeNumber, 
+    A.AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance,
+    'Monthly Detail' AS RowType
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY E.Department, E.EmployeeNumber, A.AttendanceMonth
 
+UNION
 
+-- Total attendance per employee
+SELECT 
+    E.Department, 
+    E.EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance,
+    'Employee Total' AS RowType
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY E.Department, E.EmployeeNumber
 
+UNION
 
+-- Total attendance per department
+SELECT 
+    E.Department, 
+    NULL AS EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance,
+    'Department Total' AS RowType
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+GROUP BY E.Department
 
+UNION
+
+-- Grand total
+SELECT 
+    NULL AS Department, 
+    NULL AS EmployeeNumber, 
+    NULL AS AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance,
+    'Grand Total' AS RowType
+FROM tblEmployee AS E 
+JOIN tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+
+-- Final sort for a readable report
+ORDER BY 
+    Department, 
+    EmployeeNumber, 
+    AttendanceMonth;
 

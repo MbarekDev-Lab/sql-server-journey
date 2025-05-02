@@ -381,7 +381,7 @@ union
 
 order by Department, EmployeeNumber, AttendanceMonth
 
-16. ROLLUP, GROUPING and GROUPING_ID
+--16. ROLLUP, GROUPING and GROUPING_ID
 select E.Department, E.EmployeeNumber, A.AttendanceMonth as AttendanceMonth, sum(A.NumberAttendance) as NumberAttendance,
 
     GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
