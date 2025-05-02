@@ -645,6 +645,51 @@ GROUP BY ROLLUP (E.Department, E.EmployeeNumber, A.AttendanceMonth)
 ORDER BY Department, EmployeeNumber, AttendanceMonth;
 
 
+--GROUPING SETS
+--ROUPING SETS lets specify exactly which groupings you want, unlike ROLLUP or CUBE, which follow a predefined logic.
+SELECT 
+    E.Department, 
+    E.EmployeeNumber, 
+    A.AttendanceMonth, 
+    SUM(A.NumberAttendance) AS NumberAttendance,
+    
+    -- Useful for identifying subtotal and total rows
+    GROUPING(E.EmployeeNumber) AS EmployeeNumberGroupedBy,
+    GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) AS GroupingLevel,
+    
+    -- Label rows based on grouping level
+    CASE 
+        WHEN GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) = 0 THEN 'Monthly Detail'
+        WHEN GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) = 3 THEN 'Department Total'
+        WHEN GROUPING_ID(E.Department, E.EmployeeNumber, A.AttendanceMonth) = 7 THEN 'Grand Total'
+        ELSE 'Other'
+    END AS RowType
+
+FROM 
+    tblEmployee AS E 
+JOIN 
+    tblAttendance AS A ON E.EmployeeNumber = A.EmployeeNumber
+
+GROUP BY 
+    GROUPING SETS (
+        (E.Department, E.EmployeeNumber, A.AttendanceMonth), -- full detail
+        (E.Department),                                      -- department total
+        ()                                                   -- grand total
+    )
+
+ORDER BY 
+    -- Place non-NULLs first
+    CASE WHEN E.Department IS NULL THEN 1 ELSE 0 END, 
+    E.Department,
+    
+    CASE WHEN E.EmployeeNumber IS NULL THEN 1 ELSE 0 END, 
+    E.EmployeeNumber,
+    
+    CASE WHEN A.AttendanceMonth IS NULL THEN 1 ELSE 0 END, 
+    A.AttendanceMonth;
+
+
+
 
 
  
