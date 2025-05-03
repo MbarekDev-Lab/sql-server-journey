@@ -759,6 +759,11 @@ HAVING COUNT(*) > 1;
 
 --geometry data
 BEGIN TRAN;
+
+-- Drop table if it exists
+IF OBJECT_ID('tblGeom', 'U') IS NOT NULL
+    DROP TABLE tblGeom;
+
 CREATE TABLE tblGeom (
     GXY geometry,                           -- The spatial geometry object
     Description VARCHAR(20),                -- Description of the shape
