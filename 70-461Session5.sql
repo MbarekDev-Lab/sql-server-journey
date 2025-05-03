@@ -550,7 +550,7 @@ FROM tblGeom
 
 rollback tran
 
-22. Querying LINESTRINGs, POLYGONs and CIRCULARSTRINGs
+-- 22. Querying LINESTRINGs, POLYGONs and CIRCULARSTRINGs
 begin tran
 
 create table tblGeom
@@ -621,7 +621,7 @@ where IDtblGeom = 8
 
 rollback tran
 
-23. Geography
+--23. Geography
 begin tran
 
 create table tblGeog

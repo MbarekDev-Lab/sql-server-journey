@@ -757,6 +757,56 @@ FROM (
 GROUP BY EmployeeNumber
 HAVING COUNT(*) > 1;
 
+--geometry data
+BEGIN TRAN;
+CREATE TABLE tblGeom (
+    GXY geometry,                           -- The spatial geometry object
+    Description VARCHAR(20),                -- Description of the shape
+    IDtblGeom INT IDENTITY(5,1) PRIMARY KEY -- Auto-incrementing ID starting at 5
+);
+
+INSERT INTO tblGeom (GXY, Description)
+VALUES
+    (geometry::STGeomFromText('LINESTRING (1 1, 5 5)', 0), 'First line'),
+    (geometry::STGeomFromText('LINESTRING (5 1, 1 4, 2 5, 5 1)', 0), 'Second line'),
+    (geometry::STGeomFromText('MULTILINESTRING ((1 5, 2 6), (1 4, 2 5))', 0), 'Third line'),
+    (geometry::STGeomFromText('POLYGON ((4 1, 6 3, 8 3, 6 1, 4 1))', 0), 'Polygon'),
+    (geometry::STGeomFromText('CIRCULARSTRING (1 0, 0 1, -1 0, 0 -1, 1 0)', 0), 'Circle');
+
+SELECT * FROM tblGeom;
+
+SELECT
+    IDtblGeom,
+    GXY.STGeometryType() AS GeometryType,                      -- Type of geometry
+    GXY.STStartPoint().ToString() AS StartPoint,               -- Starting point (for lines)
+    GXY.STEndPoint().ToString() AS EndPoint,                   -- Ending point (for lines)
+    GXY.STPointN(1).ToString() AS FirstPoint,                  -- First vertex
+    GXY.STPointN(2).ToString() AS SecondPoint,                 -- Second vertex (if exists)
+    GXY.STPointN(1).STX AS FirstPointX,                        -- X of first point
+    GXY.STPointN(1).STY AS FirstPointY,                        -- Y of first point
+    GXY.STBoundary().ToString() AS Boundary,                   -- Boundary (polygon edges)
+    GXY.STLength() AS Length,                                  -- Total length
+    GXY.STNumPoints() AS NumberOfPoints                        -- Number of points in shape
+FROM tblGeom;
+
+DECLARE @circle geometry;
+SELECT @circle = GXY FROM tblGeom WHERE IDtblGeom = 5;
+
+SELECT
+    IDtblGeom,
+    GXY.STIntersection(@circle).ToString() AS Intersection,    -- Overlapping geometry
+    GXY.STDistance(@circle) AS DistanceFromCircle              -- Distance from the circle
+FROM tblGeom;
+
+SELECT
+    GXY.STUnion(@circle) AS CombinedGeometry,
+    Description
+FROM tblGeom
+WHERE IDtblGeom = 8;
+
+ROLLBACK TRAN;
+
+
 
 
 
