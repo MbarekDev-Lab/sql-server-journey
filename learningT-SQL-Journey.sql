@@ -691,16 +691,23 @@ ORDER BY
     A.AttendanceMonth;
 
 
---BEGIN TRAN 
---CREATE TABLE tblGeom 
---(GXY geometry , DESCRIPTION VARCHAR(30),
---IDtblGeom INT CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1))
---INSERT INTO tblGeom
---VALUES (geometry::STGeomFromText('POINT(3 4)',0),'First point')
---SELECT * FROM tblGeom 
---ROLLBACK TRAN
-----COMMIT TRAN --to keep the table
+BEGIN TRAN
+DROP TABLE IF EXISTS tblGeom
+CREATE TABLE tblGeom 
+(GXY geometry , DESCRIPTION VARCHAR(30),
+IDtblGeom INT CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1))
+INSERT INTO tblGeom
+VALUES (geometry::STGeomFromText('POINT(3 4)',0),'First point'),
+    (geometry::STGeomFromText('POINT (3 4)', 0), 'First point'),
+    (geometry::STGeomFromText('POINT (3 5)', 0), 'Second point'),
+    (geometry::Point(4, 6, 0), 'Third Point'),
+    (geometry::STGeomFromText('MULTIPOINT ((1 2), (2 3), (3 4))', 0), 'Three Points')
 
+SELECT * FROM tblGeom 
+ROLLBACK TRAN
+
+
+----COMMIT TRAN --to keep the table
 BEGIN TRAN;
 CREATE TABLE tblGeom (
     GXY geometry,
@@ -732,6 +739,14 @@ SELECT
     GXY.STX AS X,
     GXY.STY AS Y
 FROM tblGeom;
+
+| Operator    | Description                                                  |
+| ----------- | ------------------------------------------------------------ |
+| `UNION`     | Combines rows from both queries, removes duplicates          |
+| `UNION ALL` | Combines all rows, keeps duplicates                          |
+| `INTERSECT` | Keeps only rows common to both                               |
+| `EXCEPT`    | Returns rows from the first query that are not in the second |
+
 
 
 
