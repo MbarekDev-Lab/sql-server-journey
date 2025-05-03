@@ -574,6 +574,7 @@ SELECT FLOOR(PI()) AS Result2;
 SELECT CEILING(PI()) AS Result3;
 
 
+
 -- Monthly attendance per employee
 SELECT 
     E.Department, 
@@ -628,7 +629,6 @@ ORDER BY
     Department, 
     EmployeeNumber, 
     AttendanceMonth;
-
 
 -- ROLLUP replaces multiple UNION queries
 SELECT 
@@ -746,6 +746,18 @@ FROM tblGeom;
 | `UNION ALL` | Combines all rows, keeps duplicates                          |
 | `INTERSECT` | Keeps only rows common to both                               |
 | `EXCEPT`    | Returns rows from the first query that are not in the second |
+
+-- To find duplicate EmployeeNumber in both tblEmployee tblAttendance!
+SELECT EmployeeNumber
+FROM (
+    SELECT EmployeeNumber FROM tblEmployee
+    UNION ALL
+    SELECT EmployeeNumber FROM tblAttendance
+) AS Combined
+GROUP BY EmployeeNumber
+HAVING COUNT(*) > 1;
+
+
 
 
 
