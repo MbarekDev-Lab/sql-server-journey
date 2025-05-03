@@ -519,7 +519,7 @@ select @g.STDistance(@h) as MyDistance
 
 ROLLBACK TRAN
 
-21. Defining LINESTRINGs, POLYGONs and CIRCULARSTRINGs
+--21. Defining LINESTRINGs, POLYGONs and CIRCULARSTRINGs
 begin tran
 
 create table tblGeom

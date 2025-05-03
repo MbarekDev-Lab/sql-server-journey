@@ -1,3 +1,5 @@
+USE [70-461];
+
 SELECT * FROM tblEmployee;
 SELECT * FROM tblAttendance;
 
@@ -687,6 +689,54 @@ ORDER BY
     
     CASE WHEN A.AttendanceMonth IS NULL THEN 1 ELSE 0 END, 
     A.AttendanceMonth;
+
+
+--BEGIN TRAN 
+--CREATE TABLE tblGeom 
+--(GXY geometry , DESCRIPTION VARCHAR(30),
+--IDtblGeom INT CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1))
+--INSERT INTO tblGeom
+--VALUES (geometry::STGeomFromText('POINT(3 4)',0),'First point')
+--SELECT * FROM tblGeom 
+--ROLLBACK TRAN
+----COMMIT TRAN --to keep the table
+
+BEGIN TRAN;
+CREATE TABLE tblGeom (
+    GXY geometry,
+    DESCRIPTION VARCHAR(30),
+    IDtblGeom INT CONSTRAINT PK_tblGeom PRIMARY KEY IDENTITY(1,1)
+);
+INSERT INTO tblGeom
+VALUES (geometry::STGeomFromText('POINT(3 4)', 0), 'First point');
+-- Commit the transaction so the data is saved
+COMMIT TRAN;
+
+INSERT INTO tblGeom
+VALUES 
+(geometry::STGeomFromText('POINT(4 4)', 0), 'Second point'),
+(geometry::STGeomFromText('POINT(10 10)', 0), 'Far point');
+
+--To find Points Within 2 Units of (3, 4)
+DECLARE @center geometry = geometry::STGeomFromText('POINT(3 4)', 0);
+SELECT * 
+FROM tblGeom
+WHERE GXY.STDistance(@center) <= 2;
+
+--Visualize All Data
+SELECT 
+    IDtblGeom,
+    DESCRIPTION,
+    GXY.ToString() AS GeometryText,
+    GXY.STAsText() AS WKT,
+    GXY.STX AS X,
+    GXY.STY AS Y
+FROM tblGeom;
+
+
+
+
+
 
 
 
