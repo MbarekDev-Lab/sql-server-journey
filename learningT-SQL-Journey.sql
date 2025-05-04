@@ -792,6 +792,7 @@ SELECT
     GXY.STBoundary().ToString() AS Boundary,                   -- Boundary (polygon edges)
     GXY.STLength() AS Length,                                  -- Total length
     GXY.STNumPoints() AS NumberOfPoints                        -- Number of points in shape
+
 FROM tblGeom;
 
 DECLARE @circle geometry;
@@ -809,7 +810,33 @@ SELECT
 FROM tblGeom
 WHERE IDtblGeom = 8;
 
+SELECT 
+    GXY.STStartPoint().ToString() AS StartingPoint
+FROM 
+    tblGeom;
+
+SELECT 
+    GXY.STPointN(2).STX AS SecondPointX
+FROM 
+    tblGeom
+WHERE 
+  GXY.STGeometryType() = 'MultiPoint';
+
 ROLLBACK TRAN;
+
+-- quiz line quereis 
+-- To calculate the number of points in a polygon in T-SQL using the STNumPoints()
+
+DECLARE @poly geometry
+SET @poly = geometry::STGeomFromText('POLYGON ((4 1, 6 3, 8 3, 6 1, 4 1))', 0)
+
+SELECT @poly.STNumPoints() AS NumberOfPoints
+
+
+
+
+
+
 
 
 
