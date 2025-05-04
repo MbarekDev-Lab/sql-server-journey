@@ -884,8 +884,55 @@ WHERE IDtblGeog = 2;  -- Buchholz geometry with Hamburg geometry
 
 ROLLBACK TRANSACTION;
 
--- to retrieve spatial reference system details from SQL Server's system tables
 SELECT * FROM sys.spatial_reference_systems;
+
+--Quiz Geo 
+SELECT geography::UnionAggregate(GXY) AS MergedShapes--  Merges multiple geography/geometry rows into a single shape.
+FROM tblGeog;
+
+--method that creates a box around the shapes of a collection is geometry::EnvelopeAggregat
+-- Start a transaction to allow rollback (safe testing)
+BEGIN TRAN
+IF OBJECT_ID('dbo.tblGeog', 'U') IS NOT NULL
+    DROP TABLE dbo.tblGeog;
+/*
+| Code | Object Type			      |
+| -----| ---------------------------- |
+| 'U'  | User-defined table           |
+| 'V'  | View                         |
+| 'P'  | Stored procedure             |
+| 'FN' | Scalar function              |
+| 'IF' | Inline table-valued function |
+| 'TF' | Table-valued function        |
+*/
+
+CREATE TABLE dbo.tblGeog(
+    GXY geography,
+    Description VARCHAR(100),
+    IDtblGeog INT IDENTITY(1,1) PRIMARY KEY
+);
+
+INSERT INTO dbo.tblGeog (GXY, Description)
+VALUES
+    (geography::STGeomFromText('POINT (10.000654 53.551086)', 4326), 'Hamburg, Germany'),
+    (geography::STGeomFromText('POINT (9.8656 53.3336)', 4326), 'Buchholz in der Nordheide, Germany');
+
+SELECT * FROM dbo.tblGeog;
+SELECT geography::EnvelopeAggregate(GXY).ToString() AS BoundingBox
+FROM dbo.tblGeog;
+
+SELECT 
+    IDtblGeog,
+    Description,
+    GXY.STAsText() AS WKT,
+    GXY.Lat AS Latitude,
+    GXY.Long AS Longitude
+FROM dbo.tblGeog;
+
+ROLLBACK TRAN;
+
+
+
 
 
 
