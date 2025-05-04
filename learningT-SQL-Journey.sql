@@ -856,6 +856,7 @@ SELECT * FROM tblGeog;
 DECLARE @g geography;
 SELECT @g = GXY FROM tblGeog WHERE IDtblGeog = 1;  
 
+-- Performing spatial operations like geometry type, points, distance, intersection...
 SELECT 
     IDtblGeog, 
     GXY.STGeometryType() AS GeometryType,  -- Returns the geometry type (Point, LineString, etc.)
@@ -885,6 +886,7 @@ ROLLBACK TRANSACTION;
 
 -- to retrieve spatial reference system details from SQL Server's system tables
 SELECT * FROM sys.spatial_reference_systems;
+
 
 
 
