@@ -695,7 +695,7 @@ ROLLBACK TRAN
 select *
 from sys.spatial_reference_systems
 
-24. Spatial aggregates
+--24. Spatial aggregates
 begin tran
 
 create table tblGeom

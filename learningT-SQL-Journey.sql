@@ -832,6 +832,62 @@ SET @poly = geometry::STGeomFromText('POLYGON ((4 1, 6 3, 8 3, 6 1, 4 1))', 0)
 
 SELECT @poly.STNumPoints() AS NumberOfPoints
 
+-- Geography Data
+-- Drop table if it exists 
+IF OBJECT_ID('tblGeog', 'U') IS NOT NULL
+    DROP TABLE tblGeog;
+
+BEGIN TRANSACTION
+
+CREATE TABLE tblGeog (
+    GXY geography, 
+    Description varchar(255),  
+    IDtblGeog int CONSTRAINT PK_tblGeog PRIMARY KEY IDENTITY(1,1)  
+);
+
+INSERT INTO tblGeog (GXY, Description)
+VALUES
+    (geography::STGeomFromText('POINT (9.993682 53.551086)', 4326), 'Hamburg, Germany'),
+    (geography::STGeomFromText('POINT (9.8688 53.3316)', 4326), 'Buchholz in der Nordheide, Germany'),
+    (geography::STGeomFromText('LINESTRING (9.993682 53.551086, 9.8688 53.3316)', 4326), 'Connection Hamburg-Buchholz');
+
+SELECT * FROM tblGeog;
+
+DECLARE @g geography;
+SELECT @g = GXY FROM tblGeog WHERE IDtblGeog = 1;  
+
+SELECT 
+    IDtblGeog, 
+    GXY.STGeometryType() AS GeometryType,  -- Returns the geometry type (Point, LineString, etc.)
+    GXY.STStartPoint().ToString() AS StartingPoint,  -- Start point of geometry
+    GXY.STEndPoint().ToString() AS EndingPoint,  -- End point of geometry (if applicable)
+    GXY.STPointN(1).ToString() AS FirstPoint,  -- First point in geometry (for lines or multi-points)
+    GXY.STPointN(2).ToString() AS SecondPoint,  -- Second point in geometry (for lines or multi-points)
+    GXY.STLength() AS Length,  -- Length of the geometry (relevant for LineString)
+    GXY.STIntersection(@g).ToString() AS Intersection,  -- Intersection with selected geography
+    GXY.STNumPoints() AS NumPoints,  -- Number of points in the geometry (useful for complex geometries)
+    GXY.STDistance(@g) AS DistanceFromFirstPoint  -- Distance from selected geography point (Hamburg)
+FROM tblGeog;
+
+DECLARE @h geography;
+SELECT @g = GXY FROM tblGeog WHERE IDtblGeog = 1;  -- Hamburg
+SELECT @h = GXY FROM tblGeog WHERE IDtblGeog = 2;  -- Buchholz
+
+-- Calculate the distance between two points (Hamburg and Buchholz)
+SELECT @g.STDistance(@h) AS DistanceBetweenHamburgAndBuchholz;
+
+-- Union of geometries (combining two geographical areas)
+SELECT GXY.STUnion(@g) AS UnionGeometry
+FROM tblGeog
+WHERE IDtblGeog = 2;  -- Buchholz geometry with Hamburg geometry
+
+ROLLBACK TRANSACTION;
+
+-- to retrieve spatial reference system details from SQL Server's system tables
+SELECT * FROM sys.spatial_reference_systems;
+
+
+
 
 
 
