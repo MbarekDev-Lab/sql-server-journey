@@ -931,6 +931,29 @@ FROM dbo.tblGeog;
 
 ROLLBACK TRAN;
 
+------------------------------------------- SESSION 6-------------------------------------------------------------
+SELECT *
+FROM tblTransaction AS T
+INNER JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+--LEFT JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber;
+WHERE E.EmployeeNumber = T.EmployeeNumber
+
+--return records from tblTransaction for employees whose last names start with 'Y'.
+SELECT T.*
+FROM tblTransaction AS T
+INNER JOIN tblEmployee AS E ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeLastName LIKE 'y%'
+ORDER BY T.EmployeeNumber;
+
+--Using IN subquery
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber IN (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+)
+ORDER BY EmployeeNumber;
 
 
 
