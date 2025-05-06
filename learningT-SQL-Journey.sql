@@ -1,4 +1,4 @@
-USE [70-461];
+﻿USE [70-461];
 
 SELECT * FROM tblEmployee;
 SELECT * FROM tblAttendance;
@@ -987,12 +987,57 @@ WHERE T.EmployeeNumber NOT IN (
 )
 ORDER BY T.EmployeeNumber;
 
-
 SELECT T.*
 FROM tblTransaction AS T
 INNER JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
 WHERE E.EmployeeLastName NOT LIKE 'y%'
 ORDER BY T.EmployeeNumber;
+
+--Subquery – WHERE and ANY, SOME and ALL
+
+SELECT EmployeeNumber
+FROM tblEmployee
+WHERE EmployeeLastName LIKE 'y%'
+
+-- <> ANY Almost always TRUE, unless all employee numbers match exactly.
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber <> ANY (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+) --126 <> 126 OR 126 <> 127 OR 126 <> 128 OR 126 <> 129
+  --FALSE OR TRUE OR TRUE OR TRUE → TRUE
+
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber <> ALL (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+)	-- Equivalent to WHERE EmployeeNumber NOT IN (126,127,128,129)
+
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber <= ALL (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+)	-- WHERE EmployeeNumber <= 126
+
+| Clause           | Equivalent To			| Notes                      |
+| ---------------- | ------------------	| -------------------------- |
+| = ANY / = SOME   | IN (...)				    |  Common and safe           |
+| <> ALL           | NOT IN (...)			  |  Correct for exclusions    |
+| <> ANY           | Unsafe, misleading	|  Avoid for filtering       |
+| <= ALL           | <= MIN(...)			  |  For threshold comparisons |
+
+
+
+
+
+
+
 
 
 
