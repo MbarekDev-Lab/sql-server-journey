@@ -941,19 +941,62 @@ WHERE E.EmployeeNumber = T.EmployeeNumber
 --return records from tblTransaction for employees whose last names start with 'Y'.
 SELECT T.*
 FROM tblTransaction AS T
-INNER JOIN tblEmployee AS E ON E.EmployeeNumber = T.EmployeeNumber
+INNER JOIN tblEmployee AS E ON E.EmployeeNumber = T.EmployeeNumber --Explicit join with tblEmployee
 WHERE E.EmployeeLastName LIKE 'y%'
 ORDER BY T.EmployeeNumber;
 
 --Using IN subquery
 SELECT *
 FROM tblTransaction AS T
-WHERE EmployeeNumber IN (
+WHERE EmployeeNumber IN (   --No join, filters using IN subquery
     SELECT EmployeeNumber
     FROM tblEmployee
     WHERE EmployeeLastName LIKE 'y%'
 )
 ORDER BY EmployeeNumber;
+
+--SELECT EmployeeNumber FROM tblEmployee  WHERE EmployeeLastName LIKE 'y%'
+
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber NOT IN (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+)
+ORDER BY EmployeeNumber;-- must be in tblEmployee and tblTransaction and not 126-129
+						-- INNER JOIN
+
+SELECT *
+FROM tblTransaction AS T
+WHERE EmployeeNumber  IN (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName NOT LIKE 'y%'
+)
+ORDER BY EmployeeNumber;-- must be in tblTransaction and not 126-129
+						-- left join
+
+SELECT T.*, E.EmployeeLastName
+FROM tblTransaction AS T
+JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+WHERE T.EmployeeNumber NOT IN (
+    SELECT EmployeeNumber
+    FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+)
+ORDER BY T.EmployeeNumber;
+
+
+SELECT T.*
+FROM tblTransaction AS T
+INNER JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+WHERE E.EmployeeLastName NOT LIKE 'y%'
+ORDER BY T.EmployeeNumber;
+
+
+
+
 
 
 
