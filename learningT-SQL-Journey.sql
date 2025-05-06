@@ -938,6 +938,7 @@ INNER JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
 --LEFT JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber;
 WHERE E.EmployeeNumber = T.EmployeeNumber
 
+-- 5. Subquery – WHERE and NOT
 --return records from tblTransaction for employees whose last names start with 'Y'.
 SELECT T.*
 FROM tblTransaction AS T
@@ -993,8 +994,7 @@ INNER JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
 WHERE E.EmployeeLastName NOT LIKE 'y%'
 ORDER BY T.EmployeeNumber;
 
---Subquery – WHERE and ANY, SOME and ALL
-
+--6 Subquery – WHERE and ANY, SOME and ALL
 SELECT EmployeeNumber
 FROM tblEmployee
 WHERE EmployeeLastName LIKE 'y%'
@@ -1026,11 +1026,50 @@ WHERE EmployeeNumber <= ALL (
 )	-- WHERE EmployeeNumber <= 126
 
 | Clause           | Equivalent To			| Notes                      |
-| ---------------- | ------------------	| -------------------------- |
-| = ANY / = SOME   | IN (...)				    |  Common and safe           |
-| <> ALL           | NOT IN (...)			  |  Correct for exclusions    |
-| <> ANY           | Unsafe, misleading	|  Avoid for filtering       |
-| <= ALL           | <= MIN(...)			  |  For threshold comparisons |
+| ---------------- | ------------------		| -------------------------- |
+| = ANY / = SOME   | IN (...)				|  Common and safe           |
+| <> ALL           | NOT IN (...)			|  Correct for exclusions    |
+| <> ANY           | Unsafe, misleading		|  Avoid for filtering       |
+| <= ALL           | <= MIN(...)			|  For threshold comparisons |
+
+-- 7. Subqueries in the FROM clause
+
+--Subquery in the FROM clause (filtered before the join)
+SELECT *
+FROM tblTransaction AS T
+LEFT JOIN (
+    SELECT * FROM tblEmployee
+    WHERE EmployeeLastName LIKE 'y%'
+) AS E
+ON E.EmployeeNumber = T.EmployeeNumber
+ORDER BY T.EmployeeNumber;
+
+--Filter in the WHERE clause (after join)
+SELECT *
+FROM tblTransaction AS T
+LEFT JOIN tblEmployee AS E
+ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeLastName LIKE 'y%'
+ORDER BY T.EmployeeNumber;
+
+--Filter in the ON clause (correct LEFT JOIN with condition)
+SELECT *
+FROM tblTransaction AS T
+LEFT JOIN tblEmployee AS E
+ON E.EmployeeNumber = T.EmployeeNumber
+AND E.EmployeeLastName LIKE 'y%'
+ORDER BY T.EmployeeNumber;
+
+| Join Type | Filter Location        | Result                                               |
+| --------- | ---------------------- | ---------------------------------------------------- |
+| LEFT JOIN | Inside Subquery (FROM) | Only 'y%' employees join, others = NULL              |
+| LEFT JOIN | In WHERE clause        | Behaves like INNER JOIN (filters out unmatched rows) |
+| LEFT JOIN | In ON clause           | Proper LEFT JOIN with conditional join               |
+
+
+
+
+
 
 
 
