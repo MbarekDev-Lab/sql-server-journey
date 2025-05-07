@@ -957,7 +957,6 @@ WHERE EmployeeNumber IN (   --No join, filters using IN subquery
 ORDER BY EmployeeNumber;
 
 --SELECT EmployeeNumber FROM tblEmployee  WHERE EmployeeLastName LIKE 'y%'
-
 SELECT *
 FROM tblTransaction AS T
 WHERE EmployeeNumber NOT IN (
@@ -1033,7 +1032,6 @@ WHERE EmployeeNumber <= ALL (
 | <= ALL           | <= MIN(...)			|  For threshold comparisons |
 
 -- 7. Subqueries in the FROM clause
-
 --Subquery in the FROM clause (filtered before the join)
 SELECT *
 FROM tblTransaction AS T
@@ -1065,6 +1063,36 @@ ORDER BY T.EmployeeNumber;
 | LEFT JOIN | Inside Subquery (FROM) | Only 'y%' employees join, others = NULL              |
 | LEFT JOIN | In WHERE clause        | Behaves like INNER JOIN (filters out unmatched rows) |
 | LEFT JOIN | In ON clause           | Proper LEFT JOIN with conditional join               |
+
+select *
+from tblTransaction as T
+inner join (
+select * from tblEmployee
+where EmployeeLastName like 'y%'
+) as E
+on E.EmployeeNumber = T.EmployeeNumber
+order by T.EmployeeNumber
+
+--8. Subquery – Select Clause (correlated subquery in the SELECT)
+
+SELECT 
+    E.*, 
+    (
+        SELECT COUNT(*) 
+        FROM tblTransaction AS T 
+        WHERE T.EmployeeNumber = E.EmployeeNumber
+    ) AS NumTransactions,
+    (
+        SELECT SUM(Amount) 
+        FROM tblTransaction AS T 
+        WHERE T.EmployeeNumber = E.EmployeeNumber
+    ) AS TotalAmount
+
+FROM tblEmployee AS E
+WHERE E.EmployeeLastName LIKE 'y%';
+
+
+
 
 
 
