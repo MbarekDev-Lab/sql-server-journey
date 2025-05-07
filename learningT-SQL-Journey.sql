@@ -1091,6 +1091,30 @@ SELECT
 FROM tblEmployee AS E
 WHERE E.EmployeeLastName LIKE 'y%';
 
+--1. Using EXISTS (For each row in tblTransaction, this checks whether a matching employee exists in tblEmployee)
+SELECT *
+FROM tblTransaction AS T
+WHERE EXISTS (
+    SELECT EmployeeNumber
+    FROM tblEmployee AS E
+    WHERE EmployeeLastName LIKE 'y%'
+    AND T.EmployeeNumber = E.EmployeeNumber
+)
+ORDER BY EmployeeNumber;
+
+--2. Using NOT EXISTS (It selects only those transactions where no matching employee (with last name starting with 'y') is found)
+SELECT *
+FROM tblTransaction AS T
+WHERE NOT EXISTS (
+    SELECT EmployeeNumber
+    FROM tblEmployee AS E
+    WHERE EmployeeLastName LIKE 'y%'
+    AND T.EmployeeNumber = E.EmployeeNumber
+)
+ORDER BY EmployeeNumber;
+
+
+
 
 
 
