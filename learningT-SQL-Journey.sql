@@ -1114,6 +1114,23 @@ WHERE NOT EXISTS (
 ORDER BY EmployeeNumber;
 
 
+-- Using IN
+SELECT *
+FROM tblTransaction
+WHERE EmployeeNumber IN (
+    SELECT EmployeeNumber FROM tblEmployee WHERE EmployeeLastName LIKE 'y%'
+);
+
+-- Using EXISTS
+SELECT *
+FROM tblTransaction AS T
+WHERE EXISTS (
+    SELECT 1 FROM tblEmployee AS E
+    WHERE E.EmployeeLastName LIKE 'y%' AND E.EmployeeNumber = T.EmployeeNumber
+);
+
+
+
 
 
 
