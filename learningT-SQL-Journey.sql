@@ -1130,6 +1130,14 @@ WHERE EXISTS (
 );
 
 
+-- Differences between IN and EXISTS 
+-- If the subquery returns NULL, this fails
+WHERE EmployeeNumber IN (NULL) --  No match
+-- EXISTS doesn't care
+WHERE EXISTS (...) --  Still works (faster with correlated subqueries )
+
+
+
 
 
 
