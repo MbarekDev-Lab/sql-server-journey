@@ -1091,7 +1091,7 @@ SELECT
 FROM tblEmployee AS E
 WHERE E.EmployeeLastName LIKE 'y%';
 
---1. Using EXISTS (For each row in tblTransaction, this checks whether a matching employee exists in tblEmployee)
+-- Using EXISTS (For each row in tblTransaction, this checks whether a matching employee exists in tblEmployee)
 SELECT *
 FROM tblTransaction AS T
 WHERE EXISTS (
@@ -1135,6 +1135,102 @@ WHERE EXISTS (
 WHERE EmployeeNumber IN (NULL) --  No match
 -- EXISTS doesn't care
 WHERE EXISTS (...) --  Still works (faster with correlated subqueries )
+
+--10. Top 10 from various categories
+SELECT * 
+FROM (
+    SELECT 
+        D.Department, 
+        EmployeeNumber, 
+        EmployeeFirstName, 
+        EmployeeLastName,
+        RANK() OVER (PARTITION BY D.Department ORDER BY E.EmployeeNumber) AS TheRank
+    FROM tblDepartment AS D
+    JOIN tblEmployee AS E 
+        ON D.Department = E.Department
+) AS MyTable
+WHERE TheRank <= 10
+ORDER BY Department, EmployeeNumber;
+
+--11. With Statement
+WITH tblWithRanking AS (
+    SELECT 
+        D.Department, 
+        EmployeeNumber, 
+        EmployeeFirstName, 
+        EmployeeLastName,
+        DENSE_RANK() OVER (PARTITION BY D.Department ORDER BY E.EmployeeNumber) AS TheRank
+    FROM tblDepartment AS D  --RANK() can result in gaps, if there are ties then DENSE_RANK()
+    JOIN tblEmployee AS E ON D.Department = E.Department -- if no gaps ROW_NUMBER() gives strict top-N without ties.
+),
+Transaction2014 AS (
+    SELECT * 
+    FROM tblTransaction 
+    WHERE DateOfTransaction < '2015-01-01'
+)
+SELECT * 
+FROM tblWithRanking
+LEFT JOIN Transaction2014 
+    ON tblWithRanking.EmployeeNumber = Transaction2014.EmployeeNumber
+WHERE TheRank <= 5
+ORDER BY Department, tblWithRanking.EmployeeNumber;
+
+-- Exercises 
+WITH Numbers AS ( -- CTE 1: Numbers
+    SELECT TOP (SELECT MAX(EmployeeNumber) FROM tblTransaction)
+        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNumber
+    FROM tblTransaction AS U
+),
+
+Transactions2014 AS ( -- CTE 2: Filters transactions that happened in 2014 only
+    SELECT * 
+    FROM tblTransaction 
+    WHERE DateOfTransaction >= '2014-01-01' AND DateOfTransaction < '2015-01-01'
+),
+
+tblGap AS ( -- CTE 3: Uses LAG() and LEAD() to group contiguous gaps
+    SELECT 
+        U.RowNumber,
+        RowNumber - LAG(RowNumber) OVER (ORDER BY RowNumber) AS PreviousRowNumber,
+        LEAD(RowNumber) OVER (ORDER BY RowNumber) - RowNumber AS NextRowNumber,
+        CASE 
+            WHEN RowNumber - LAG(RowNumber) OVER (ORDER BY RowNumber) = 1 THEN 0 
+            ELSE 1 
+        END AS GroupGap
+    FROM Numbers AS U
+    LEFT JOIN Transactions2014 AS T
+        ON U.RowNumber = T.EmployeeNumber
+    WHERE T.EmployeeNumber IS NULL
+),
+
+tblGroup AS ( -- CTE 4: Assigns a group ID to each gap segment
+    SELECT *, 
+           SUM(GroupGap) OVER (ORDER BY RowNumber) AS TheGroup
+    FROM tblGap
+)
+
+-- Final SELECT: Show ranges of missing employee numbers
+SELECT  
+    MIN(RowNumber) AS StartingEmployeeNumber, 
+    MAX(RowNumber) AS EndingEmployeeNumber,
+    MAX(RowNumber) - MIN(RowNumber) + 1 AS NumberEmployees
+FROM tblGroup
+GROUP BY TheGroup
+ORDER BY TheGroup;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
