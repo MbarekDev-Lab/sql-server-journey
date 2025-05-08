@@ -1219,7 +1219,7 @@ GROUP BY TheGroup
 ORDER BY TheGroup;
 
 -- 14. Pivot
-WITH myTable AS (
+WITH CTETable AS (
     SELECT 
         YEAR(DateOfTransaction) AS TheYear, 
         MONTH(DateOfTransaction) AS TheMonth, 
@@ -1230,7 +1230,7 @@ WITH myTable AS (
 SELECT 
     TheYear, 
     [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12]
-FROM myTable
+FROM CTETable
 PIVOT (
     SUM(Amount) 
     FOR TheMonth IN ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])
