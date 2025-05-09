@@ -1267,6 +1267,7 @@ PIVOT (
 ORDER BY TheYear;
 
 --17. Self Joins
+--join the table to itself:
 
 BEGIN TRAN;
 ALTER TABLE tblEmployee 
@@ -1282,8 +1283,54 @@ SELECT
 FROM tblEmployee AS E
 LEFT JOIN tblEmployee AS M
 ON E.Manager = M.EmployeeNumber;
+
+SELECT 
+    E.EmployeeFirstName AS Employee,
+    M.EmployeeFirstName AS Manager
+FROM tblEmployee AS E
+LEFT JOIN tblEmployee AS M
+    ON E.Manager = M.EmployeeNumber;
 -- COMMIT TRAN; -- Keep the changes
 ROLLBACK TRAN; -- Undo everything
+
+--18. Recursive CTE
+BEGIN TRAN;
+ALTER TABLE tblEmployee
+ADD Manager INT;
+GO
+UPDATE tblEmployee
+SET Manager = ((EmployeeNumber - 123) / 10) + 123
+WHERE EmployeeNumber > 123;
+WITH CTETable AS (
+    SELECT 
+        EmployeeNumber, 
+        EmployeeFirstName, 
+        EmployeeLastName, 
+        0 AS BossLevel 
+    FROM tblEmployee
+    WHERE Manager IS NULL
+    UNION ALL
+    
+	SELECT 
+        E.EmployeeNumber, 
+        E.EmployeeFirstName, 
+        E.EmployeeLastName, 
+        CTETable.BossLevel + 1 AS BossLevel
+    FROM tblEmployee AS E
+    JOIN CTETable ON E.Manager = CTETable.EmployeeNumber
+)
+-- Select all employees with their respective boss levels
+SELECT * 
+FROM CTETable;
+
+ROLLBACK TRAN;
+
+
+
+
+
+
+
 
 
 
