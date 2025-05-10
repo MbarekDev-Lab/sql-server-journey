@@ -1437,7 +1437,7 @@ GROUP BY
     E.EmployeeLastName;
 
 -- 21. Inline Table Function
-
+--Create Inline Table-Valued Function
 CREATE FUNCTION TransactionList(@EmployeeNumber INT)
 RETURNS TABLE
 AS
@@ -1445,4 +1445,34 @@ RETURN (
     SELECT * FROM tblTransaction
     WHERE EmployeeNumber = @EmployeeNumber
 )
+
+--Get All Transactions for Employee 123
+SELECT *
+FROM dbo.TransactionList(123)
+
+-- Find All Employees Who Have At Least One Transaction
+SELECT *
+FROM tblEmployee
+WHERE EXISTS (
+    SELECT * FROM dbo.TransactionList(EmployeeNumber)
+)
+
+--Same Result Using JOIN + DISTINCT
+SELECT DISTINCT E.*
+FROM tblEmployee AS E
+JOIN tblTransaction AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+
+--Same Result Using a Simple Subquery
+SELECT *
+FROM tblEmployee AS E
+WHERE EXISTS (
+    SELECT 1
+    FROM tblTransaction AS T
+    WHERE E.EmployeeNumber = T.EmployeeNumber
+)
+
+
+
+
 
