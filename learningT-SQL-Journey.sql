@@ -1365,6 +1365,31 @@ SELECT NEWID() as nDate
 SELECT RAND()
 SELECT CURRENT_TIMESTAMP, SYSDATETIME()
 
+--19. Scalar Functions 1
+--Creating a Scalar Function
+CREATE FUNCTION AmountPlusOne(@Amount smallmoney)
+RETURNS smallmoney
+AS
+BEGIN
+    RETURN @Amount + 1
+END
+GO
+
+--Using (Calling) the Function in a SELECT
+SELECT 
+    DateOfTransaction, 
+    EmployeeNumber, 
+    Amount, 
+    dbo.AmountPlusOne(Amount) AS AmountAndOne-- return a single value and can be used in SELECT, WHERE, ORDER BY
+FROM tblTransaction 
+
+--Executing (using EXEC) the Function into a Variable
+DECLARE @myValue smallmoney
+EXEC @myValue = dbo.AmountPlusOne @Amount = 345.67
+SELECT @myValue
+
+
+
 
 
 
