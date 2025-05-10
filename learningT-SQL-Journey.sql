@@ -1221,7 +1221,7 @@ ORDER BY TheGroup;
 -- 14. Pivot
 WITH CTETable AS (
     SELECT 
-        YEAR(DateOfTransaction) AS TheYear, 
+        YEAR(DateOfTransaction) AS TheYear,  
         MONTH(DateOfTransaction) AS TheMonth, 
         Amount 
     FROM tblTransaction
@@ -1247,7 +1247,7 @@ WITH myTable AS (
 )
 SELECT 
     TheYear, 
-    ISNULL([1], 0) AS [1],
+    ISNULL([1], 0) AS ['mbarek'],
     ISNULL([2], 0) AS [2],
     ISNULL([3], 0) AS [3],
     ISNULL([4], 0) AS [4],
@@ -1266,9 +1266,15 @@ PIVOT (
 ) AS myPvt
 ORDER BY TheYear;
 
+-- 16. UnPivot
+SELECT *
+FROM [tblPivot]
+UNPIVOT (Amount FOR Month IN ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])) AS tblUnPivot
+
+where Amount <> 0
+
 --17. Self Joins
 --join the table to itself:
-
 BEGIN TRAN;
 ALTER TABLE tblEmployee 
 ADD Manager INT;
@@ -1294,14 +1300,33 @@ LEFT JOIN tblEmployee AS M
 ROLLBACK TRAN; -- Undo everything
 
 --18. Recursive CTE
+--	 -.- Syntax 
+WITH cte_name AS (
+    -- Anchor part
+    SELECT ...
+    FROM ...
+    WHERE ... -- base condition
+    UNION ALL
+    -- Recursive part
+    SELECT ...
+    FROM table_name t
+    JOIN cte_name c ON ...
+)
+SELECT * FROM cte_name;
+
+-- CTE (Common Table Expression) practice
 BEGIN TRAN;
+-- Add a Manager Column:
 ALTER TABLE tblEmployee
 ADD Manager INT;
 GO
 UPDATE tblEmployee
 SET Manager = ((EmployeeNumber - 123) / 10) + 123
 WHERE EmployeeNumber > 123;
+
 WITH CTETable AS (
+
+ -- Anchor member: the top-level bosses (who have no manager)
     SELECT 
         EmployeeNumber, 
         EmployeeFirstName, 
@@ -1310,7 +1335,8 @@ WITH CTETable AS (
     FROM tblEmployee
     WHERE Manager IS NULL
     UNION ALL
-    
+
+	-- Recursive member: find people managed by those in the anchor
 	SELECT 
         E.EmployeeNumber, 
         E.EmployeeFirstName, 
@@ -1319,10 +1345,10 @@ WITH CTETable AS (
     FROM tblEmployee AS E
     JOIN CTETable ON E.Manager = CTETable.EmployeeNumber
 )
+
 -- Select all employees with their respective boss levels
 SELECT * 
 FROM CTETable;
-
 ROLLBACK TRAN;
 
 
@@ -1332,65 +1358,3 @@ ROLLBACK TRAN;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
