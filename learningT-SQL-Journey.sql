@@ -1417,6 +1417,21 @@ WHERE name = 'NumberOfTransactions' AND type = 'FN';
 -- This function returns the number of transactions 
 
 --Using a Scalar Function:
+--Syntax 
+CREATE FUNCTION [dbo].[FunctionName]
+(
+    @param1 int,
+	@param2 int
+)
+RETURNS INT
+AS
+BEGIN
+
+    RETURN @param1 + @param2
+
+END
+
+
 SELECT 
     EmployeeNumber, 
     dbo.NumberOfTransactions(EmployeeNumber) AS TransactionCount
@@ -1438,13 +1453,26 @@ GROUP BY
 
 -- 21. Inline Table Function
 --Create Inline Table-Valued Function
+--Syntax 
+CREATE FUNCTION [dbo].[FunctionName]
+(
+    @param1 int,
+    @param2 char(5)
+)
+RETURNS TABLE AS RETURN
+(
+    SELECT @param1 AS c1,
+	       @param2 AS c2
+)
+
+
 CREATE FUNCTION TransactionList(@EmployeeNumber INT)
 RETURNS TABLE
 AS
 RETURN (
     SELECT * FROM tblTransaction
     WHERE EmployeeNumber = @EmployeeNumber
-)
+)--It can be used in SELECT, JOIN, or EXISTS
 
 --Get All Transactions for Employee 123
 SELECT *
@@ -1471,6 +1499,59 @@ WHERE EXISTS (
     FROM tblTransaction AS T
     WHERE E.EmployeeNumber = T.EmployeeNumber
 )
+
+--22. Multi-statment Table Function 
+--Syntax 
+CREATE FUNCTION [dbo].[FunctionName]
+(
+    @param1 int,
+    @param2 char(5)
+)
+RETURNS @returntable TABLE 
+(
+	[c1] int,
+	[c2] char(5)
+)
+AS
+BEGIN
+    INSERT @returntable
+    SELECT @param1, @param2
+    RETURN 
+END
+
+--Check Column Names
+SELECT COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'tblTransaction';
+
+CREATE FUNCTION GetTransactionsOverAmount
+(
+    @MinAmount MONEY
+)
+RETURNS @Result TABLE
+(
+    EmployeeNumber INT,
+    Amount MONEY,
+    DateOfTransaction DATE
+)
+AS
+BEGIN
+    INSERT INTO @Result
+    SELECT 
+        EmployeeNumber, 
+        Amount, 
+        DateOfTransaction
+    FROM tblTransaction
+    WHERE Amount > @MinAmount
+
+    -- additional logic here if needed...
+
+    RETURN
+END
+
+-- Get all transactions over 500
+SELECT * FROM dbo.GetTransactionsOverAmount(500)
+
 
 
 
