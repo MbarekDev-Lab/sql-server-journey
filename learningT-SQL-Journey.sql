@@ -1388,9 +1388,53 @@ DECLARE @myValue smallmoney
 EXEC @myValue = dbo.AmountPlusOne @Amount = 345.67
 SELECT @myValue
 
+-- 20. Scalar Functions 2
+IF EXISTS(SELECT * FROM sys.objects WHERE name = 'NumberOfTransactions' ) --type FN
+	DROP FUNCTION NumberOfTransactions;
 
+IF OBJECT_ID(N'NumberOfTransactions', N'FN') IS NOT NULL
+    DROP FUNCTION NumberOfTransactions;
+GO
 
+CREATE FUNCTION NumberOfTransactions(@EmployeeNumber INT)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @NumberOfTransactions INT;
 
+    SELECT @NumberOfTransactions = COUNT(*)
+    FROM tblTransaction
+    WHERE EmployeeNumber = @EmployeeNumber;
+
+    RETURN @NumberOfTransactions;
+END
+
+SELECT * 
+FROM sys.objects 
+WHERE name = 'NumberOfTransactions' AND type = 'FN';
+
+-- comparison between Scalar functions and using traditional select and joining the tables 
+--This function returns the number of transactions 
+
+--Using a Scalar Function:
+SELECT 
+    EmployeeNumber, 
+    dbo.NumberOfTransactions(EmployeeNumber) AS TransactionCount
+FROM tblEmployee;
+
+--Using JOIN + GROUP BY (Set-Based Approach)
+SELECT 
+    E.EmployeeNumber, 
+    E.EmployeeFirstName, 
+    E.EmployeeLastName, 
+    COUNT(T.EmployeeNumber) AS TransactNumber
+FROM tblEmployee AS E
+LEFT JOIN tblTransaction AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+GROUP BY 
+    E.EmployeeNumber, 
+    E.EmployeeFirstName, 
+    E.EmployeeLastName;
 
 
 
