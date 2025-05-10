@@ -1414,7 +1414,7 @@ FROM sys.objects
 WHERE name = 'NumberOfTransactions' AND type = 'FN';
 
 -- comparison between Scalar functions and using traditional select and joining the tables 
---This function returns the number of transactions 
+-- This function returns the number of transactions 
 
 --Using a Scalar Function:
 SELECT 
@@ -1436,10 +1436,13 @@ GROUP BY
     E.EmployeeFirstName, 
     E.EmployeeLastName;
 
+-- 21. Inline Table Function
 
-
-
-
-
-
+CREATE FUNCTION TransactionList(@EmployeeNumber INT)
+RETURNS TABLE
+AS
+RETURN (
+    SELECT * FROM tblTransaction
+    WHERE EmployeeNumber = @EmployeeNumber
+)
 
