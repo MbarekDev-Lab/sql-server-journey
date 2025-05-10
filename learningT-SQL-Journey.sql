@@ -1327,17 +1327,18 @@ WHERE EmployeeNumber > 123;
 WITH CTETable AS (
 
  -- Anchor member: the top-level bosses (who have no manager)
-    SELECT 
+    SELECT --The anchor member (the base case).
         EmployeeNumber, 
         EmployeeFirstName, 
         EmployeeLastName, 
         0 AS BossLevel 
     FROM tblEmployee
     WHERE Manager IS NULL
-    UNION ALL
+
+    UNION ALL --The statement terminated. Recursive CTEs require UNION ALL.
 
 	-- Recursive member: find people managed by those in the anchor
-	SELECT 
+	SELECT --The recursive member (repeated until no new rows are produced).
         E.EmployeeNumber, 
         E.EmployeeFirstName, 
         E.EmployeeLastName, 
@@ -1350,6 +1351,21 @@ WITH CTETable AS (
 SELECT * 
 FROM CTETable;
 ROLLBACK TRAN;
+
+-- Section 36 
+-- T-SQL functions are classified as deterministic or non-deterministic 
+--Deterministic Functions 
+SELECT ABS(-10)
+SELECT UPPER('M''BAREK'); --SQL Server uses single quotes ' for string literals.
+SELECT ROUND(123.456, 2) 
+
+--Non-Deterministic Functions
+SELECT GETDATE()
+SELECT NEWID() as nDate
+SELECT RAND()
+SELECT CURRENT_TIMESTAMP, SYSDATETIME()
+
+
 
 
 
