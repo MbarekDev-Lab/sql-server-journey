@@ -1431,7 +1431,6 @@ BEGIN
 
 END
 
-
 SELECT 
     EmployeeNumber, 
     dbo.NumberOfTransactions(EmployeeNumber) AS TransactionCount
@@ -1552,8 +1551,60 @@ END
 -- Get all transactions over 500
 SELECT * FROM dbo.GetTransactionsOverAmount(500)
 
+/*
+	differences between Scalar vs Inline table-valued vs Multi-statement table-valued :
+	 1. Scalar returns a single (scalar) value.
+	 2. Inline returns a table contains a single SELECT statement (no BEGIN...END, no procedural logic)
+	 3. Multi-Statement returns a table, but built in multiple steps. (can have procedural logic
+													, multiple statements,variable declarations)
+-- Syntax of Multi-statement table-valued :  
+CREATE FUNCTION dbo.SplitString(@Input NVARCHAR(MAX))
+RETURNS @Result TABLE (Item NVARCHAR(100))
+AS
+BEGIN
+    DECLARE @Pos INT = CHARINDEX(',', @Input)
+    WHILE @Pos > 0
+    BEGIN
+        INSERT INTO @Result(Item) VALUES (LEFT(@Input, @Pos - 1))
+        SET @Input = SUBSTRING(@Input, @Pos + 1, LEN(@Input))
+        SET @Pos = CHARINDEX(',', @Input)
+    END
+    RETURN
+END
+*/
 
+-- 22. Apply
+SELECT * FROM dbo.GetTransactionsOverAmount(500)
 
+GO
+
+SELECT * , (SELECT COUNT(*) FROM dbo.GetTransactionsOverAmount(E.EmployeeNumber)) AS GottenNumOffTransaction
+FROM tblEmployee AS E
+
+/*
+APPLY allows you to evaluate a table-valued function per row in the outer query (tblEmployee).
+LEFT JOIN expects a fixed table, not something that depends on a per-row input.
+*/
+SELECT * FROM tblEmployee AS E
+-- LEFT JOIN dbo.GetTransactionsOverAmount(E.EmployeeNumber) AS T -- istead of left join we outer apply 
+OUTER APPLY  dbo.GetTransactionsOverAmount(E.EmployeeNumber) AS T
+--ON E.EmployeeNumber = T.EmployeeNumber
+
+SELECT *
+FROM tblEmployee AS E
+CROSS APPLY dbo.GetTransactionsOverAmount(E.EmployeeNumber) AS T
+
+-- outer apply all of tblEmployee , UDF 0 + rows
+-- cross apply UDF RETURN 1 + rows
+
+-- OUTER APPLY = Like LEFT JOIN, includes all left rows
+-- CROSS APPLY = Like INNER JOIN, excludes rows with no matches
+
+--Using TVF in the WHERE close 
+--For each employee, it counts the number of transactions returned by GetTransactionsOverAmount().
+SELECT * 
+FROM tblEmployee AS E
+WHERE (SELECT COUNT(*) FROM dbo.GetTransactionsOverAmount(E.EmployeeNumber)) > 3
 
 
 
