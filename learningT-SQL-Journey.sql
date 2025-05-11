@@ -1464,7 +1464,6 @@ RETURNS TABLE AS RETURN
 	       @param2 AS c2
 )
 
-
 CREATE FUNCTION TransactionList(@EmployeeNumber INT)
 RETURNS TABLE
 AS
@@ -1605,6 +1604,41 @@ CROSS APPLY dbo.GetTransactionsOverAmount(E.EmployeeNumber) AS T
 SELECT * 
 FROM tblEmployee AS E
 WHERE (SELECT COUNT(*) FROM dbo.GetTransactionsOverAmount(E.EmployeeNumber)) > 3
+
+-- 23. Synonyms :
+
+--Synonyms in T-SQL, feature for simplifying object references 
+--especially when dealing with long names, remote servers, or complex schemas.
+
+SELECT * FROM sys.views
+
+--creating Local Table Synonym
+CREATE SYNONYM EmployeeTable FOR tblEmployee;
+
+--EmployeeTable becomes a friendly alias for tblEmployee
+SELECT * FROM EmployeeTable;
+
+CREATE SYNONYM DateTable FOR tblDate;
+--SELECT * FROM DateTable; -- will not work becouse the is no tblDate object exists !
+
+-- Check if the object tblDate exists
+--IF OBJECT_ID('tblDate', 'U') IS NOT NULL
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'tblDate')
+BEGIN
+    -- If tblDate exists, select from DateTable (synonym)
+    SELECT * FROM DateTable;
+END
+ELSE
+BEGIN
+    PRINT 'The object tblDate does not exist.';
+END
+
+-- creat remote Table Synonym
+CREATE SYNONYM RemoteTable FOR OVERTHERE.70-461remote.dbo.tblRemote;-- Instead of always writing SELECT * FROM OVERTHERE.70-461remote.dbo.tblRemote;
+SELECT * FROM RemoteTable;
+
+
+
 
 
 
