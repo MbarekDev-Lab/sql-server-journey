@@ -1606,7 +1606,6 @@ FROM tblEmployee AS E
 WHERE (SELECT COUNT(*) FROM dbo.GetTransactionsOverAmount(E.EmployeeNumber)) > 3
 
 -- 23. Synonyms :
-
 --Synonyms in T-SQL, feature for simplifying object references 
 --especially when dealing with long names, remote servers, or complex schemas.
 
@@ -1636,6 +1635,37 @@ END
 -- creat remote Table Synonym
 CREATE SYNONYM RemoteTable FOR OVERTHERE.70-461remote.dbo.tblRemote;-- Instead of always writing SELECT * FROM OVERTHERE.70-461remote.dbo.tblRemote;
 SELECT * FROM RemoteTable;
+
+--24. Dynamic Queries
+
+select * from tblEmployee where EmployeeNumber = 129;
+go
+
+--Dynamic SQL with Hardcoded Command
+declare @command as varchar(255);
+set @command = 'select * from tblEmployee where EmployeeNumber = 129;'
+set @command = 'select * from tblTransaction'
+execute (@command);
+go
+
+--Dynamic SQL with Potential for SQL Injection
+declare @command as varchar(255), @param as varchar(50);
+set @command = 'select * from tblEmployee where EmployeeNumber = '
+set @param = '129 or 1=1'
+execute (@command + @param);  -- SQL Injection potential
+go
+
+--Mitigating SQL Injection with sp_executesql (safer approach of sp_executesql) 
+declare @command as nvarchar(255), @param as nvarchar(50);
+set @command = N'select * from tblEmployee where EmployeeNumber = @ProductID'
+set @param = N'129'
+--set @param = '129 or 1=1' --it will throw an Error converting data type nvarchar to int.
+execute sys.sp_executesql @statement = @command, @params = N'@ProductID int', @ProductID = @param;
+go
+--Always using sp_executesql when working with dynamic SQL that includes user input
+
+
+
 
 
 
