@@ -1664,6 +1664,31 @@ execute sys.sp_executesql @statement = @command, @params = N'@ProductID int', @P
 go
 --Always using sp_executesql when working with dynamic SQL that includes user input
 
+--The least likely to have SQL Injection problems is this version:
+DECLARE @command AS NVARCHAR(255), @param AS NVARCHAR(50);
+
+SET @command = N'SELECT * FROM tblEmployee WHERE EmployeeNumber = @ProductID'
+SET @param = N'129'
+
+EXECUTE sys.sp_executesql 
+    @statement = @command, 
+    @params = N'@ProductID INT', 
+    @ProductID = @param;
+
+--It supports parameterized queries
+DECLARE @sql NVARCHAR(MAX) = N'SELECT * FROM tblEmployee WHERE EmployeeNumber = @uid';
+EXEC sp_executesql @sql, N'@uid INT', @uid = 129;
+
+--Avoids unsafe string concatenation
+-- EXEC('SELECT * FROM Users WHERE UserId = ' + @userInput)
+
+-- Example of injection:
+--SET @userInput = '1; DROP TABLE Users; --'
+--sp_executesql with parameters like using PreparedStatement in Java 
+
+
+
+
 
 
 
