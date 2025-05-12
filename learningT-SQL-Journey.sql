@@ -1708,6 +1708,66 @@ ROLLBACK TRAN;
 
 INSERT INTO tblEmployee3 VALUES ('Saidwww');   -- Identity = 2 (not 1)
 
+--26 GUIDs (uniqueidentifier) in SQL Server using NEWID() and NEWSEQUENTIALID()
+
+DECLARE @newvalue AS uniqueidentifier  
+SET @newvalue = NEWID()   --Generates a completely random GUID. Good for uniqueness, not for indexing.
+SELECT @newvalue AS TheNewID  
+
+--Random seed from time:
+DECLARE @randomnumbergenerator INT = 
+    DATEPART(MILLISECOND, SYSDATETIME()) +
+    1000 * (
+        DATEPART(SECOND, SYSDATETIME()) +
+        60 * (DATEPART(MINUTE, SYSDATETIME()) + 60 * DATEPART(HOUR, SYSDATETIME()))
+    );
+
+SELECT RAND(@randomnumbergenerator) AS RandomNumber;
+
+--Creating and testing a table with NEWID()
+CREATE TABLE tblEmployee4 (
+    UniqueID uniqueidentifier CONSTRAINT df_tblEmployee4_UniqueID DEFAULT NEWID(),
+    EmployeeNumber INT CONSTRAINT uq_tblEmployee4_EmployeeNumber UNIQUE
+)
+
+--Creating and testing a table with NEWSEQUENTIALID()
+--CONSTRAINT is a keyword used to define rules on columns or tables to enforce data integrity
+CREATE TABLE tblEmployee5 (
+    UniqueID uniqueidentifier CONSTRAINT df_tblEmployee4_UniqueID DEFAULT NEWSEQUENTIALID(),
+    EmployeeNumber INT CONSTRAINT uq_tblEmployee4_EmployeeNumber UNIQUE
+)
+
+--NEWSEQUENTIALID() can only be used as a column default
+SET @newvalue = NEWSEQUENTIALID() --Not allowed in T-SQL unless used as a default
+--NEWSEQUENTIALID() : when GUID column is a primary key or index
+--NEWID()			: if pure randomness is more important than index performance.
+
+--DEFAULT NEWSEQUENTIALID() —> This auto-generates a sequential GUID whenever a row is inserted
+BEGIN TRAN
+CREATE TABLE tblEmployee6 (
+    UniqueID uniqueidentifier 
+        CONSTRAINT df_tblEmployee6_UniqueID DEFAULT NEWSEQUENTIALID(),
+    EmployeeNumber int 
+        CONSTRAINT uq_tblEmployee6_EmployeeNumber UNIQUE
+)
+INSERT INTO tblEmployee6(EmployeeNumber)
+VALUES (1), (2), (3)
+SELECT * FROM tblEmployee6
+ROLLBACK TRAN
+
+/* result 
+	F2529DA5-F52E-F011-A2C0-047BCBB46567	1
+	F3529DA5-F52E-F011-A2C0-047BCBB46567	2
+	F4529DA5-F52E-F011-A2C0-047BCBB46567	3
+*/
+
+
+
+
+
+
+
+
 
 
 
