@@ -1761,6 +1761,24 @@ ROLLBACK TRAN
 	F4529DA5-F52E-F011-A2C0-047BCBB46567	3
 */
 
+-- 27. Defining SEQUENCES
+BEGIN TRAN  -- A sequence object of type BIGINT
+CREATE SEQUENCE newSeq AS BIGINT --It starts at 1
+START WITH 1    
+INCREMENT BY 1 -- Each new number goes up by 1
+MINVALUE 1  -- The smallest number it can produce
+MAXVALUE 999999
+CYCLE
+CACHE 50 --SQL Server will pre-allocate 50 values for performance
+CREATE SEQUENCE secondSeq AS INT
+SELECT * FROM sys.sequences  --to see metadata about all sequence objects in the database
+ROLLBACK TRAN
+
+
+
+
+
+
 
 
 
