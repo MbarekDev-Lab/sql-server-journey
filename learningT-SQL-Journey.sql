@@ -1686,6 +1686,28 @@ EXEC sp_executesql @sql, N'@uid INT', @uid = 129;
 --SET @userInput = '1; DROP TABLE Users; --'
 --sp_executesql with parameters like using PreparedStatement in Java 
 
+-- 25. Problems with IDENTITY
+-- How to make the row uniqe
+CREATE TABLE tblEmployee3 (
+    EmployeeID INT IDENTITY(1,1),
+    EmployeeName VARCHAR(50)
+);
+
+BEGIN TRAN;
+INSERT INTO tblEmployee3 VALUES ('New Name');
+SELECT * FROM  tblEmployee3;
+ROLLBACK TRAN;
+
+--DELETE from tblEmployee3 
+--TRUNCATE TABLE tblEmployee3;
+
+BEGIN TRAN;
+INSERT INTO tblEmployee3 VALUES ('Mbarek'); -- Identity = 1
+SELECT * FROM  tblEmployee3;
+ROLLBACK TRAN;
+
+INSERT INTO tblEmployee3 VALUES ('Saidwww');   -- Identity = 2 (not 1)
+
 
 
 
