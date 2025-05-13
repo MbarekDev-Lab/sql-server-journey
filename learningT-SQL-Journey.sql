@@ -1784,6 +1784,109 @@ ROLLBACK TRAN
 | Gaps (restartable) | Hard           | Easier to restart/reset    |
 
 
+--28. NEXT VALUE FOR sequence
+--Create and Use a SEQUENCE Temporarily
+BEGIN TRAN
+CREATE SEQUENCE newSeq AS BIGINT
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+CACHE 50
+select NEXT VALUE FOR newSeq as NextValue;
+ROLLBACK TRAN --NextValue always 1
+
+--. start with Creating Sequence to Use in a Table
+CREATE SEQUENCE newSeq AS BIGINT
+START WITH 1
+INCREMENT BY 1
+MINVALUE 1
+CACHE 50
+
+--Add a Column to tblTransaction That Uses the Sequence
+ALTER TABLE tblTransaction
+ADD NextNumber INT CONSTRAINT DF_Transaction DEFAULT NEXT VALUE FOR newSeq
+
+--Dropping and Re-adding the Column and Constraint
+ALTER TABLE tblTransaction DROP DF_Transaction
+ALTER TABLE tblTransaction DROP COLUMN NextNumber
+ALTER TABLE tblTransaction ADD NextNumber INT
+ALTER TABLE tblTransaction ADD CONSTRAINT DF_Transaction DEFAULT NEXT VALUE FOR newSeq FOR NextNumber
+
+--Insert a Row and Populate the Sequence Value
+BEGIN TRAN
+SELECT * FROM tblTransaction
+INSERT INTO tblTransaction (Amount, DateOfTransaction, EmployeeNumber)
+VALUES (1, '2017-01-01', 123)
+SELECT * FROM tblTransaction WHERE EmployeeNumber = 123
+--new row is added, then the NextNumber is set manually using NEXT VALUE FOR
+UPDATE tblTransaction
+SET NextNumber = NEXT VALUE FOR newSeq
+WHERE NextNumber IS NULL
+
+SELECT * FROM tblTransaction
+ROLLBACK TRAN
+
+-- end with resetting and Cleaning Up
+ALTER SEQUENCE newSeq RESTART WITH 1
+
+ALTER TABLE tblTransaction DROP DF_Transaction
+ALTER TABLE tblTransaction DROP COLUMN NextNumber
+DROP SEQUENCE newSeq
+
+--Summary
+| Feature                | Purpose                                                                |
+| ---------------------- | ---------------------------------------------------------------------- |
+| SEQUENCE               | Generates unique numeric values, reusable across tables or procedures. |
+| NEXT VALUE FOR         | Gets the next number in the sequence.                                  |
+| DEFAULT NEXT VALUE FOR | Automatically assigns next sequence value on insert.                   |
+| ALTER SEQUENCE RESTART | Resets sequence value (like reseeding).                                |
+| ROLLBACK TRAN          | Keeps your DB clean during experiments.                                |
+
+--31. Introducing XML
+DECLARE @xml XML
+SET @xml = '<Shopping ShopperName="Phillip Burton" Weather="Nice">
+  <ShoppingTrip ShoppingTripID="L1">
+    <Item Cost="5">Bananas</Item>
+    <Item Cost="4">Apples</Item>
+    <Item Cost="3">Cherries</Item>
+  </ShoppingTrip>
+  <ShoppingTrip ShoppingTripID="L2">
+    <Item>Emeralds</Item>
+    <Item>Diamonds</Item>
+    <Item>Furniture</Item>
+  </ShoppingTrip>
+</Shopping>'
+select @xml
+
+--ALTER TABLE dbo.tblEmployee
+--ADD XMLOutput XML;
+
+UPDATE [dbo].[tblEmployee]
+SET XMLOutput = @xml
+WHERE EmployeeNumber = 200
+
+--INSERT INTO dbo.tblEmployee (EmployeeNumber, XMLOutput)
+--VALUES (200, @xml);
+
+SELECT * FROM [dbo].[tblEmployee]
+
+-- Get shopper name and weather
+SELECT 
+  XMLOutput.value('(/Shopping/@ShopperName)[1]', 'VARCHAR(50)') AS ShopperName,
+  XMLOutput.value('(/Shopping/@Weather)[1]', 'VARCHAR(50)') AS Weather
+FROM dbo.tblEmployee
+WHERE EmployeeNumber = 200;
+
+
+
+
+
+
+
+
+
+
+
 
 
 
