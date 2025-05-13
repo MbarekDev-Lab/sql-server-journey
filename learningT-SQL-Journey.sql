@@ -1892,6 +1892,7 @@ FROM [dbo].[tblEmployee] AS E
 LEFT JOIN [dbo].[tblTransaction] AS T
     ON E.EmployeeNumber = T.EmployeeNumber
 WHERE E.EmployeeNumber BETWEEN 200 AND 202
+--ELEMENTS Forces SQL Server to render each column as a child element, not an attribute.
 FOR XML RAW('MyRow'), ELEMENTS
 
 
