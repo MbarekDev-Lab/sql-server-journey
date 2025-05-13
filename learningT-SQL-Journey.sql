@@ -1774,6 +1774,18 @@ CREATE SEQUENCE secondSeq AS INT
 SELECT * FROM sys.sequences  --to see metadata about all sequence objects in the database
 ROLLBACK TRAN
 
+--Sequences vs Identity
+| Feature            | IDENTITY       | SEQUENCE                   |
+| ------------------ | -------------- | -------------------------- |
+| Table-bound        | Yes            | No (global object)         |
+| Manual access      | No (auto only) | Yes (via `NEXT VALUE FOR`) |
+| Reusability        | No             | Yes                        |
+| CYCLE option       | No             | Yes                        |
+| Gaps (restartable) | Hard           | Easier to restart/reset    |
+
+
+
+
 
 
 
