@@ -1877,6 +1877,24 @@ SELECT
 FROM dbo.tblEmployee
 WHERE EmployeeNumber = 200;
 
+--32. FOR XML RAW
+--ALTER TABLE dbo.tblEmployee
+--DROP COLUMN XMLOutput ;
+
+SELECT 
+    E.EmployeeNumber, 
+    E.EmployeeFirstName, 
+    E.EmployeeLastName,
+    E.DateOfBirth, 
+    T.Amount, 
+    T.DateOfTransaction
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 200 AND 202
+FOR XML RAW('MyRow'), ELEMENTS
+
+
 
 
 
