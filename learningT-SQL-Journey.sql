@@ -1936,6 +1936,40 @@ LEFT JOIN [dbo].[tblTransaction] AS T
 WHERE E.EmployeeNumber BETWEEN 200 AND 202
 FOR XML PATH('Employees'), ROOT('MyXML');
 
+--35. FOR XML EXPLICIT
+-- FOR XML EXPLICIT, which gives fine grained control over XML structure 
+-- but it's also the most complex and error prone of the XML modes in T-SQL.
+-- Alternative: FOR XML PATH (Much Easier)
+-- Tag and Parent: Define the XML hierarchy.
+SELECT
+    1 AS Tag,
+    NULL AS Parent, 
+    E.EmployeeFirstName AS [Elements!1!EmployeeFirstName],
+    E.EmployeeLastName AS [Elements!1!EmployeeLastName],
+    E.EmployeeNumber AS [Elements!1!EmployeeNumber],
+    E.DateOfBirth AS [Elements!1!DateOfBirth],
+    NULL AS [Elements!2!Amount],
+    NULL AS [Elements!2!DateOfTransaction]
+FROM dbo.tblEmployee AS E
+WHERE E.EmployeeNumber BETWEEN 200 AND 202
+
+UNION ALL
+
+SELECT
+    2 AS Tag,    -- Tag = 1 ->  parent row (Employee)
+    1 AS Parent, -- Tag = 2 ->  child row (Transaction)
+    NULL,
+    NULL,
+    T.EmployeeNumber,
+    NULL,
+    T.Amount,
+    T.DateOfTransaction
+FROM dbo.tblTransaction AS T
+INNER JOIN dbo.tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+WHERE T.EmployeeNumber BETWEEN 200 AND 202
+----If the column alias [Elements!2!Amount] is in the first query, it should also appear in the second (and vice versa).
+ORDER BY EmployeeNumber, [Elements!2!Amount]
+FOR XML EXPLICIT;
 
 
 
