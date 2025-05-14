@@ -1908,6 +1908,8 @@ LEFT JOIN [dbo].[tblTransaction] AS T
     ON E.EmployeeNumber = T.EmployeeNumber
 WHERE E.EmployeeNumber BETWEEN 200 AND 202
 FOR XML AUTO, ELEMENTS
+--AUTO is ideal when you want nested XML where joined rows (like transactions) are children of a parent row (like employee).
+--This is very useful for APIs, XML exports, or integrations.
 
 --AUTO vs RAW
 | Feature       | FOR XML AUTO                       | FOR XML RAW                         |
@@ -1916,6 +1918,23 @@ FOR XML AUTO, ELEMENTS
 | Element Names | Derived from table aliases         | Manually specified (RAW('MyRow')) |
 | Nested Tags   | Yes (parent-child based on joins)  | No – flat unless manually handled   |
 
+
+--34. FOR XML PATH
+--FOR XML PATH('Employees'): Each row becomes an <Employees> element.
+--ROOT('MyXML'): Wraps the entire XML result with a root node <MyXML>
+--Attributes: Prefixed with @EmployeeFirstName becomes an XML attribute of <Employees>.
+SELECT 
+    E.EmployeeFirstName AS '@EmployeeFirstName',
+    E.EmployeeLastName AS '@EmployeeLastName',
+    E.EmployeeNumber,
+    E.DateOfBirth,
+    T.Amount AS 'Transaction/Amount',
+    T.DateOfTransaction AS 'Transaction/DateOfTransaction'
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 200 AND 202
+FOR XML PATH('Employees'), ROOT('MyXML');
 
 
 
