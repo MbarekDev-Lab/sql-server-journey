@@ -1880,7 +1880,6 @@ WHERE EmployeeNumber = 200;
 --32. FOR XML RAW
 --ALTER TABLE dbo.tblEmployee
 --DROP COLUMN XMLOutput ;
-
 SELECT 
     E.EmployeeNumber, 
     E.EmployeeFirstName, 
@@ -1894,6 +1893,29 @@ LEFT JOIN [dbo].[tblTransaction] AS T
 WHERE E.EmployeeNumber BETWEEN 200 AND 202
 --ELEMENTS Forces SQL Server to render each column as a child element, not an attribute.
 FOR XML RAW('MyRow'), ELEMENTS
+
+--33. FOR XML AUTO
+--  AUTO Mode Automatically names the XML elements after the table aliases in the query (E, T).
+SELECT 
+    E.EmployeeNumber, 
+    E.EmployeeFirstName, 
+    E.EmployeeLastName,
+    E.DateOfBirth, 
+    T.Amount, 
+    T.DateOfTransaction
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 200 AND 202
+FOR XML AUTO, ELEMENTS
+
+--AUTO vs RAW
+| Feature       | FOR XML AUTO                       | FOR XML RAW                         |
+| ------------- | ---------------------------------- | ----------------------------------- |
+| Structure     | Hierarchical, based on table joins | Flat list (1 XML element per row)   |
+| Element Names | Derived from table aliases         | Manually specified (RAW('MyRow')) |
+| Nested Tags   | Yes (parent-child based on joins)  | No – flat unless manually handled   |
+
 
 
 
