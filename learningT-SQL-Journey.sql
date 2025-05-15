@@ -1987,7 +1987,7 @@ set @xml='<Shopping ShopperName="M barek " >
 </Shopping>'
 select @xml
 
--- XQuery .value() Method Syntax: xml_variable.value('XQuery_expression', 'SQL_data_type')
+-- XQuery .value() Method Syntax: xml_variable.value('XQuery_expression', 'SQL_data_type') to retrieve the data from xml
 SELECT @xml.value('(/Shopping/ShoppingTrip/Item/@Cost)[1]', 'varchar(50)')
 
 -- All Item Names and Costs:
@@ -1995,6 +1995,43 @@ SELECT
     Items.value('.', 'varchar(50)') AS ItemName,
     Items.value('@Cost', 'varchar(50)') AS Cost
 FROM @xml.nodes('/Shopping/ShoppingTrip/Item') AS X(Items)
+
+--36. XQuery Modify method
+DECLARE @xml XML;
+SET @xml = '
+<Shopping ShopperName="Mbarek">
+  <ShoppingTrip ShoppingTripID="L1">
+    <Item Cost="5">Bananas</Item>
+    <Item Cost="4">Apples</Item>
+    <Item Cost="3">Cherries</Item>
+  </ShoppingTrip>
+  <ShoppingTrip ShoppingTripID="L2">
+    <Item>Emeralds</Item>
+    <Item>Diamonds</Item>
+    <Item>Furniture</Item>
+  </ShoppingTrip>
+</Shopping>';
+
+-- Display the original XML
+SELECT @xml AS OriginalXML;
+
+-- Modify the third Item in the first ShoppingTrip
+-- Apply the update with SET
+SET @xml.modify('
+  replace value of (/Shopping/ShoppingTrip[1]/Item[3]/@Cost)[1]
+  with "6.0"
+');
+-- Display the modified XML
+SELECT @xml AS ModifiedXML;
+
+--Insert a new <Item> into the second <ShoppingTrip>
+SET @x.modify('
+  insert <Item Cost="5">New Food</Item>
+  into (/Shopping/ShoppingTrip)[2]
+');
+
+-- View the final result
+SELECT @x AS FinalXML;
 
 
 
