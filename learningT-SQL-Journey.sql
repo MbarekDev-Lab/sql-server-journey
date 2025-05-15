@@ -2025,13 +2025,13 @@ SET @xml.modify('
 SELECT @xml AS ModifiedXML;
 
 --Insert a new <Item> into the second <ShoppingTrip>
-SET @x.modify('
+SET @xml.modify('
   insert <Item Cost="5">New Food</Item>
   into (/Shopping/ShoppingTrip)[2]
 ');
 
 -- View the final result
-SELECT @x AS FinalXML;
+SELECT @xml AS FinalXML;
 
 
 
