@@ -1971,6 +1971,37 @@ WHERE T.EmployeeNumber BETWEEN 200 AND 202
 ORDER BY EmployeeNumber, [Elements!2!Amount]
 FOR XML EXPLICIT;
 
+--35. XQuery Value method
+declare @xml xml
+set @xml='<Shopping ShopperName="M barek " >
+	<ShoppingTrip ShoppingTripID="L1" >
+		<Item Cost="5">Bananas</Item>
+		<Item Cost="4">Apples</Item>
+		<Item Cost="3">Cherries</Item>
+	</ShoppingTrip>
+	<ShoppingTrip ShoppingTripID="L2" >
+		<Item>Emeralds</Item>
+		<Item>Diamonds</Item>
+		<Item>Furniture</Item>
+	</ShoppingTrip>
+</Shopping>'
+select @xml
+
+-- XQuery .value() Method Syntax: xml_variable.value('XQuery_expression', 'SQL_data_type')
+SELECT @xml.value('(/Shopping/ShoppingTrip/Item/@Cost)[1]', 'varchar(50)')
+
+-- All Item Names and Costs:
+SELECT 
+    Items.value('.', 'varchar(50)') AS ItemName,
+    Items.value('@Cost', 'varchar(50)') AS Cost
+FROM @xml.nodes('/Shopping/ShoppingTrip/Item') AS X(Items)
+
+
+
+
+
+
+
 
 
 
