@@ -2034,8 +2034,32 @@ SET @xml.modify('
 SELECT @xml AS FinalXML;
 
 
+--37. XQuery Query and FLWOR 1  (For-Let-Where-Order-Return) 
+-- Return each <Item> element
+SELECT @xml.query('
+  for $ValueRetrieved in /Shopping/ShoppingTrip/Item
+  return $ValueRetrieved
+');
 
+--Return just the text content of each item
+SELECT @xml.query('
+  for $ValueRetrieved in /Shopping/ShoppingTrip/Item
+  return string($ValueRetrieved)
+');
+--concatinat string 
+select '1'+ '1'
 
+-- Return text from first ShoppingTrip only, with a semicolon separator
+SELECT @xml.query('
+  for $ValueRetrieved in /Shopping/ShoppingTrip[1]/Item
+  return concat(string($ValueRetrieved), ";")
+'); -- -> Bananas; Apples; Cherries;
+
+| Query                      | Purpose                         | Output            |
+| -------------------------- | ------------------------------- | ------------------|
+| $ValueRetrieved            | Returns whole nodes             | Full XML elements |
+| string($ValueRetrieved)    | Returns text inside nodes       | Plain text        |
+| concat(string(...), ";")   | Appends string with separator   | Text with ;       |
 
 
 
