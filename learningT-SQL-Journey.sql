@@ -2130,6 +2130,27 @@ CROSS APPLY t.xmlCol.nodes('/Shopping/ShoppingTrip/Item') as tbl(col)
 | .value('@Attr', type)   | Extracts attribute value                                               |
 | .value('.', type)       | Extracts node inner text                                               |
 
+--41. Importing and exporting XML using the bcp utility (Bulk Copy Program) 
+--Exporting data from a SQL Server table to a file
+--Importing data from a file into a SQL Server table
+--bcp [70-461].dbo.tblDepartment out mydata.out -N -T
+
+| Part                            | Meaning                                                   |
+| ------------------------------- | --------------------------------------------------------- |
+|  bcp                            | Starts the Bulk Copy operation                            |
+|  [70-461S5].dbo.tblDepartment   | Database and table to export                              |
+|  out mydata.out                 | Export to a file named "mydata.out"                       |
+|  -N                             | Use **native format** (best for SQL Server-to-SQL Server) |
+|  -T                             | Use a **trusted connection** (Windows Authentication)     |
+
+-- to Create the Destination Table (It must match the structure of the source table (tblDepartment) )
+create table dbo.tblDepartment2
+(
+  [Department] varchar(19) null,
+  [DepartmentHead] varchar(19) null
+)
+
+
 
 
 
