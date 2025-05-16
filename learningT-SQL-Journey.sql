@@ -2062,33 +2062,35 @@ SELECT @xml.query('
 | concat(string(...), ";")   | Appends string with separator   | Text with ;       |
 
 
+--39. nodes using Variable (shredding a variable)
+DECLARE @xml XML;
+SET @xml = '
+<Shopping ShopperName="Mbarek">
+  <ShoppingTrip ShoppingTripID="L1">
+    <Item Cost="5">Bananas</Item>
+    <Item Cost="4">Apples</Item>
+    <Item Cost="3">Cherries</Item>
+  </ShoppingTrip>
+  <ShoppingTrip ShoppingTripID="L2">
+    <Item>Emeralds</Item>
+    <Item>Diamonds</Item>
+    <Item>Furniture</Item>
+  </ShoppingTrip>
+</Shopping>';
+select tbl.col.value('.', 'varchar(50)') as Item,
+       tbl.col.value('@Cost','varchar(50)') as Cost
+into tblTemp
+from @xml.nodes('/Shopping/ShoppingTrip/Item') as tbl(col)
 
+select * from tblTemp
+drop table tblTemp
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+| Feature       | .nodes() Approach                     | FLWOR (XQuery)                                 |
+| ------------- | ------------------------------------- | ---------------------------------------------- |
+| Output format | Relational rows (T-SQL table)         | XML (or string/XML fragments)                  |
+| Syntax style  | T-SQL with XML methods                | XQuery (more declarative)                      |
+| Use case      | Easy data extraction and joins        | Complex filtering, formatting, and nesting     |
+| Performance   | Usually faster and easier to optimize | Slightly more overhead, used for formatted XML |
 
 
 
