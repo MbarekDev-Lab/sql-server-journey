@@ -2150,6 +2150,55 @@ create table dbo.tblDepartment2
   [DepartmentHead] varchar(19) null
 )
 
+-- 42. Bulk Insert and Openrowset
+DROP TABLE #tblXML;
+CREATE TABLE #tblXML(XmlCol XML);
+
+BULK INSERT #tblXML
+FROM 'C:\xml\SampleDataBulkInsert.txt';
+
+SELECT * FROM #tblXML;
+DROP TABLE #tblXML;
+
+--OPENROWSET + BULK (Better for single XML)
+DROP TABLE #tblXML;
+CREATE TABLE #tblXML(XmlCol XML);
+
+BULK INSERT #tblXML
+FROM 'C:\XML\SampleDataBulkInsert.txt';
+
+SELECT * FROM #tblXML;
+DROP TABLE #tblXML;
+
+--OPENROWSET + BULK (Better for single XML)
+CREATE TABLE #tblXML(IntCol INT IDENTITY(1,1), XmlCol XML);
+INSERT INTO #tblXML(XmlCol)
+SELECT * FROM OPENROWSET(
+    BULK 'C:\XML\SampleDataOpenRowset.txt',
+    SINGLE_BLOB
+) AS x;
+
+SELECT * FROM #tblXML;
+
+--Alternative: Use OPENROWSET (Better! )
+SELECT * FROM OPENROWSET(
+    BULK 'C:\xml\SampleDataBulkInsert.txt',
+    SINGLE_BLOB
+) AS x;
+
+
+--To find the SQL Server service account:
+SELECT servicename, service_account
+FROM sys.dm_server_services;
+
+
+
+
+
+
+
+
+
 
 
 
