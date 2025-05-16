@@ -2092,6 +2092,46 @@ drop table tblTemp
 | Use case      | Easy data extraction and joins        | Complex filtering, formatting, and nesting     |
 | Performance   | Usually faster and easier to optimize | Slightly more overhead, used for formatted XML |
 
+--40. notes using table (shredding a table)
+declare @x1 xml, @x2 xml
+set @x1 = '<Shopping ShopperName="Phillip Burton">
+  <ShoppingTrip ShoppingTripID="L1">
+    <Item Cost="5">Bananas</Item>
+    <Item Cost="4">Apples</Item>
+    <Item Cost="3">Cherries</Item>
+  </ShoppingTrip>
+</Shopping>'
+set @x2 = '<Shopping ShopperName="Phillip Burton">
+  <ShoppingTrip ShoppingTripID="L2">
+    <Item>Emeralds</Item>
+    <Item>Diamonds</Item>
+    <Item>Furniture</Item>
+  </ShoppingTrip>
+</Shopping>'
+
+create table #tblXML(pkXML INT PRIMARY KEY, xmlCol XML)
+insert into #tblXML(pkXML, xmlCol) VALUES (1, @x1)
+insert into #tblXML(pkXML, xmlCol) VALUES (2, @x2)
+
+select tbl.col.value('@Cost','varchar(50)')
+from #tblXML
+CROSS APPLY xmlCol.nodes('/Shopping/ShoppingTrip/Item') as tbl(col)
+
+select t.pkXML,
+       tbl.col.value('.', 'varchar(50)') as Item,
+       tbl.col.value('@Cost','varchar(50)') as Cost
+from #tblXML t
+CROSS APPLY t.xmlCol.nodes('/Shopping/ShoppingTrip/Item') as tbl(col)
+
+| Concept                 | Meaning                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| xmlCol.nodes(...)       | Selects multiple XML nodes as a rowset                                 |
+| CROSS APPLY             | Applies a function/table-valued result per each row of the outer table |
+| .value('@Attr', type)   | Extracts attribute value                                               |
+| .value('.', type)       | Extracts node inner text                                               |
+
+
+
 
 
 
