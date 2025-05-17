@@ -2276,6 +2276,101 @@ from #tempTblXML
 where xmlCol.exist('/Shopping/ShoppingTrip/Item[@Cost="5"]') = 1
 
 
+-- 47. JSON in SQL Server 
+-- Declare and Set JSON Variable
+declare @json NVARCHAR(4000)
+
+set @json = '
+{
+  "name": "M barek",
+  "ShoppingTrip": {
+    "ShoppingTripItem": "L1",
+    "Items": [
+      {"Item":"Bananas", "Cost":5},
+      {"Item":"Apples", "Cost":4},
+      {"Item":"Cherries", "Cost":3}
+    ]
+  }
+}'
+
+-- Validate JSON Format: Returns 1 if valid, 0 if not
+select isjson(@json)
+
+-- Extract Data with JSON_VALUE
+-- Case-sensitive key; this will return NULL
+select json_value(@json, '$."Name"')         
+
+-- Correct: Key is "name", not "Name"
+select json_value(@json, 'strict $.name')     -- Returns: M barek
+
+-- Extract Specific Item in Array
+-- Returns the second item's name ("Apples")
+select json_value(@json, 'strict $.ShoppingTrip.Items[1].Item')
+
+-- Modify the second item's name to "Big Bananas"
+select json_modify(@json, 'strict $.ShoppingTrip.Items[1].Item', 'Big Bananas')
+
+-- Replace the entire second item object
+select json_modify(@json, 'strict $.ShoppingTrip.Items[1]', '{"Item":"Big Apples", "Cost":1}')
+
+-- Same as above, using JSON_QUERY to treat the new value as a JSON object
+select json_modify(@json, 'strict $.ShoppingTrip.Items[1]', json_query('{"Item":"Big Apples", "Cost":1}'))
+
+-- Add a new property "Date" at the root level
+select json_modify(@json, '$.Date', '2022-01-01')
+
+-- Parse JSON with OPENJSON
+-- Returns key-value pairs from the top-level JSON object
+select * from openjson(@json)
+
+-- Returns each item in the Items array as a row (as raw JSON)
+select * from openjson(@json, '$.ShoppingTrip.Items')
+
+-- Parse and return tabular data (structured columns)
+select * from openjson(@json, '$.ShoppingTrip.Items')
+with (
+  Item varchar(10),
+  Cost int
+)
+
+-- Convert a SQL table into a JSON object
+select 'Bananas' as Item, 5 as Cost
+union
+select 'Apples', 4
+union
+select 'Cherries', 3
+for json path, root('MyShoppingTrip')
+
+-- Expected output:
+-- {
+--   "MyShoppingTrip": [
+--     { "Item": "Bananas", "Cost": 5 },
+--     { "Item": "Apples", "Cost": 4 },
+--     { "Item": "Cherries", "Cost": 3 }
+--   ]
+-- }
+
+-- Summary of JSON Functions:
+-- | Function        | Purpose                               |
+-- |-----------------|----------------------------------------|
+-- | ISJSON()        | Checks if string is valid JSON         |
+-- | JSON_VALUE()    | Extracts a scalar value                |
+-- | JSON_QUERY()    | Extracts a full object or array        |
+-- | JSON_MODIFY()   | Modifies or adds elements to JSON      |
+-- | OPENJSON()      | Parses JSON into a table               |
+-- | FOR JSON PATH   | Converts SQL result set into JSON      |
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
