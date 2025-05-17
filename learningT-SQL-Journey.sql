@@ -2186,25 +2186,94 @@ SELECT * FROM OPENROWSET(
     SINGLE_BLOB
 ) AS x;
 
-
 --To find the SQL Server service account:
 SELECT servicename, service_account
 FROM sys.dm_server_services;
 
+-- 43. Schema :
+SELECT 
+    E.EmployeeNumber, 
+    E.EmployeeFirstName, 
+    E.EmployeeLastName,
+    T.Amount, 
+    T.DateOfTransaction
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T
+    ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 200 AND 202
+FOR XML RAW, XMLSCHEMA;
+
+--FOR XML RAW: Returns rows as raw XML elements (<row ... />).
+--XMLSCHEMA: Appends an in-line XML Schema Definition (XSD) at the top of the output.
+
+| XML Type               | Meaning                        | SQL Type Equivalent                      |
+| ---------------------- | ------------------------------ | ---------------------------------------- |
+| i4 or int              | Integer (whole number)         | int, smallint                            |
+| boolean                | Logical true/false (0/1)       | bit                                      |
+| dateTime.iso8601       | ISO 8601 datetime              | datetime, smalldatetime, datetime2       |
+| double                 | Double-precision float         | float, real                              |
+| string                 | Character string               | varchar, nvarchar, text                  |
+| nil (with xsi:nil)     | Explicit NULL                  | null                                     |
 
 
+-- 46. XML Indexes 
 
+--  1: Declare and Set XML Variables
+declare @x1 xml, @x2 xml
 
+set @x1 = '<Shopping ShopperName="Phillip Burton">
+  <ShoppingTrip ShoppingTripID="L1">
+    <Item Cost="5">Bananas</Item>
+    <Item Cost="4">Apples</Item>
+    <Item Cost="3">Cherries</Item>
+  </ShoppingTrip>
+</Shopping>'
 
+set @x2 = '<Shopping ShopperName="Phillip Burton">
+  <ShoppingTrip ShoppingTripID="L2">
+    <Item>Emeralds</Item>
+    <Item>Diamonds</Item>
+    <Item>Furniture<Color></Color></Item>
+  </ShoppingTrip>
+</Shopping>'
 
+--  2: Create Temporary Table (Drop if it already exists)
+if object_id('tempdb..#tempTblXML') is not null
+    drop table #tempTblXML;
 
+create table #tempTblXML (
+  pkXML INT PRIMARY KEY,
+  xmlCol XML
+)
 
+--  3: Insert XML Data into Temporary Table
+insert into #tempTblXML(pkXML, xmlCol) values (1, @x1)
+insert into #tempTblXML(pkXML, xmlCol) values (2, @x2)
 
+--  4: Create Primary XML Index
+create primary xml index pk_tempTblXML on #tempTblXML(xmlCol)
+go
 
+--  5: Create Secondary XML Indexes
+-- Note: These must be in a separate batch (after GO)
 
+-- a. PATH Index: Speeds up path-based XQuery (e.g., using .exist or .query)
+create xml index secpk_tempTblXML_Path on #tempTblXML(xmlCol)
+using xml index pk_tempTblXML for PATH
 
+-- b. VALUE Index: Speeds up queries that retrieve specific values via .value() or .exist()
+create xml index secpk_tempTblXML_Value on #tempTblXML(xmlCol)
+using xml index pk_tempTblXML for VALUE
 
+-- c. PROPERTY Index: Optimizes access to XML typed with XML schema (not strictly needed for untyped XML)
+create xml index secpk_tempTblXML_Property on #tempTblXML(xmlCol)
+using xml index pk_tempTblXML for PROPERTY
 
+--  6: Example Query using PATH index
+-- Retrieves rows where an <Item> has an attribute Cost="5"
+select pkXML
+from #tempTblXML
+where xmlCol.exist('/Shopping/ShoppingTrip/Item[@Cost="5"]') = 1
 
 
 
