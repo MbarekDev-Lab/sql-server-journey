@@ -2339,7 +2339,7 @@ union
 select 'Apples', 4
 union
 select 'Cherries', 3
-for json path, root('MyShoppingTrip')
+for json path, root('MyShoppingList')
 
 -- Expected output:
 -- {
@@ -2351,7 +2351,8 @@ for json path, root('MyShoppingTrip')
 -- }
 
 -- Summary of JSON Functions:
--- | Function        | Purpose                               |
+
+-- | Function        | Purpose                                |
 -- |-----------------|----------------------------------------|
 -- | ISJSON()        | Checks if string is valid JSON         |
 -- | JSON_VALUE()    | Extracts a scalar value                |
@@ -2360,17 +2361,101 @@ for json path, root('MyShoppingTrip')
 -- | OPENJSON()      | Parses JSON into a table               |
 -- | FOR JSON PATH   | Converts SQL result set into JSON      |
 
+DECLARE @json2 NVARCHAR(MAX) = '
+{
+  "Items": [
+    {"Item":"Bananas", "Cost":5},
+    {"Item":"Apples", "Cost":4},
+    {"Item":"Cherries", "Cost":3}
+  ]
+}'
 
+-- Extract structured data from the JSON array
+SELECT *
+FROM OPENJSON(@json2, '$.Items')
+/*
+The WITH clause you're referring to is used in SQL Server with the OPENJSON function 
+to define a schema (i.e., a table structure) for the JSON data being parsed.*/
+WITH (
+  Item VARCHAR(10),
+  Cost INT
+)
 
+-- 48 Temporal Table (also called a system-versioned table) 
+/* 
+    Create a temporal table to track employee records over time.
+    A temporal table automatically keeps a history of all changes.
+*/
 
+CREATE TABLE [dbo].[tblEmployeeTemporal] (
+    [EmployeeNumber] INT NOT NULL PRIMARY KEY CLUSTERED,         
+    [EmployeeFirstName] VARCHAR(50) NOT NULL,                    
+    [EmployeeMiddleName] VARCHAR(50) NULL,                      
+    [EmployeeLastName] VARCHAR(50) NOT NULL,                     
+    [EmployeeGovernmentID] CHAR(10) NOT NULL,                   
+    [DateOfBirth] DATE NOT NULL,                                
+    [Department] VARCHAR(19) NULL,                              
 
+    /* Start of system time period - records when row becomes valid */
+    [ValidFrom] DATETIME2(2) GENERATED ALWAYS AS ROW START NOT NULL,
 
+    /* End of system time period - records when row stops being valid */
+    [ValidTo] DATETIME2(2) GENERATED ALWAYS AS ROW END NOT NULL,
 
+    /* Defines the period column for system-versioned table */
+    PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+)
+WITH (
+    SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory]) 
+	/* Enable versioning and specify history table */
+);
 
+GO
 
+/* 
+    Insert multiple employee records into the temporal table.
+    These rows are the current valid rows and will be tracked over time.
+*/
+INSERT INTO [dbo].[tblEmployeeTemporal]
+([EmployeeNumber], [EmployeeFirstName], [EmployeeMiddleName], [EmployeeLastName],
+ [EmployeeGovernmentID], [DateOfBirth], [Department])
+VALUES
+(123, 'Jane', NULL, 'Zwilling', 'AB123456G', '1985-01-01', 'Customer Relations'),
+(124, 'Carolyn', 'Andrea', 'Zimmerman', 'AB234578H', '1975-06-01', 'Commercial'),
+(125, 'Jane', NULL, 'Zabokritski', 'LUT778728T', '1977-12-09', 'Commercial'),
+(126, 'Ken', 'J', 'Yukish', 'PO201903O', '1969-12-27', 'HR'),
+(127, 'Terri', 'Lee', 'Yu', 'ZH206496W', '1986-11-14', 'Customer Relations'),
+(128, 'Roberto', NULL, 'Young', 'EH793082D', '1967-04-05', 'Customer Relations');
 
+/* View current records in the temporal table */
+SELECT * FROM dbo.tblEmployeeTemporal;
 
+/*
+    Update an employee's last name.
+    This action will trigger the temporal system 
+	to store the old version of the row in the history table.
+*/
+UPDATE [dbo].[tblEmployeeTemporal]
+SET EmployeeLastName = 'Smith'
+WHERE EmployeeNumber = 124;
 
+/* Another update - this will again archive the previous version */
+UPDATE [dbo].[tblEmployeeTemporal]
+SET EmployeeLastName = 'Albert'
+WHERE EmployeeNumber = 124;
 
+/* View current data (after updates) */
+SELECT * FROM dbo.tblEmployeeTemporal;
 
+/* 
+    Before dropping the table, you must disable system versioning.
+    This detaches the link between current and history tables.
+*/
+ALTER TABLE [dbo].[tblEmployeeTemporal]
+SET (SYSTEM_VERSIONING = OFF);
 
+/* Drop the current (temporal) table */
+DROP TABLE [dbo].[tblEmployeeTemporal];
+
+/* Drop the associated history table */
+DROP TABLE [dbo].[tblEmployeeHistory];
