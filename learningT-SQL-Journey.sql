@@ -2578,6 +2578,42 @@ FROM dbo.tblEmployeeTemporal2
 FOR SYSTEM_TIME FROM '2020-01-01' TO '2021-02-15'
 WHERE EmployeeNumber = 124;
 
+--Querying temporal data between time periods
+--FROM ... TO
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME  
+FROM '2020-01-01T00:00:00' TO '2026-02-15T00:00:00';
+
+--BETWEEN ... AND
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME  
+BETWEEN '2020-01-01T00:00:00' AND '2026-02-15T00:00:00';
+
+--CONTAINED IN (start, end)
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME  
+CONTAINED IN ('2020-01-01T00:00:00', '2026-02-15T00:00:00');
+
+-- Add Filtering (WHERE)
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME  
+FROM '2020-01-01T00:00:00' TO '2026-02-01T00:00:00'
+WHERE EmployeeNumber = 124;
+
+--ALL
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME ALL;
+
+
+
+
+
+
 
 
 
