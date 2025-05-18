@@ -573,8 +573,6 @@ SELECT POWER(4, 3) AS Result1;
 SELECT FLOOR(PI()) AS Result2;
 SELECT CEILING(PI()) AS Result3;
 
-
-
 -- Monthly attendance per employee
 SELECT 
     E.Department, 
@@ -2382,41 +2380,39 @@ WITH (
 )
 
 -- 48 Temporal Table (also called a system-versioned table) 
-/* 
+/*
     Create a temporal table to track employee records over time.
     A temporal table automatically keeps a history of all changes.
 */
 
-CREATE TABLE [dbo].[tblEmployeeTemporal] (
-    [EmployeeNumber] INT NOT NULL PRIMARY KEY CLUSTERED,         
+CREATE TABLE [dbo].[tblEmployeeTemporal2] (
+    -- Basic employee data
+    [EmployeeNumber] INT NOT NULL PRIMARY KEY CLUSTERED,         -- Unique employee ID
     [EmployeeFirstName] VARCHAR(50) NOT NULL,                    
-    [EmployeeMiddleName] VARCHAR(50) NULL,                      
-    [EmployeeLastName] VARCHAR(50) NOT NULL,                     
-    [EmployeeGovernmentID] CHAR(10) NOT NULL,                   
-    [DateOfBirth] DATE NOT NULL,                                
+    [EmployeeMiddleName] VARCHAR(50) NULL,                       
+    [EmployeeLastName] VARCHAR(50) NOT NULL,                    
+    [EmployeeGovernmentID] CHAR(10) NOT NULL,                    
+    [DateOfBirth] DATE NOT NULL,                                 
     [Department] VARCHAR(19) NULL,                              
 
-    /* Start of system time period - records when row becomes valid */
-    [ValidFrom] DATETIME2(2) GENERATED ALWAYS AS ROW START NOT NULL,
+    -- Temporal system-versioning columns
+    [ValidFrom] DATETIME2(2) GENERATED ALWAYS AS ROW START NOT NULL,  -- Row valid from
+    [ValidTo] DATETIME2(2) GENERATED ALWAYS AS ROW END NOT NULL,      -- Row valid to
 
-    /* End of system time period - records when row stops being valid */
-    [ValidTo] DATETIME2(2) GENERATED ALWAYS AS ROW END NOT NULL,
-
-    /* Defines the period column for system-versioned table */
+    -- Declare system time period for versioning
     PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
 )
 WITH (
-    SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory]) 
-	/* Enable versioning and specify history table */
+    SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory2])  -- Enable versioning and specify history table
 );
 
 GO
 
-/* 
-    Insert multiple employee records into the temporal table.
-    These rows are the current valid rows and will be tracked over time.
+/*
+    Insert initial employee records into the temporal table.
+    These represent the current valid data tracked over time.
 */
-INSERT INTO [dbo].[tblEmployeeTemporal]
+INSERT INTO [dbo].[tblEmployeeTemporal2]
 ([EmployeeNumber], [EmployeeFirstName], [EmployeeMiddleName], [EmployeeLastName],
  [EmployeeGovernmentID], [DateOfBirth], [Department])
 VALUES
@@ -2427,35 +2423,49 @@ VALUES
 (127, 'Terri', 'Lee', 'Yu', 'ZH206496W', '1986-11-14', 'Customer Relations'),
 (128, 'Roberto', NULL, 'Young', 'EH793082D', '1967-04-05', 'Customer Relations');
 
-/* View current records in the temporal table */
-SELECT * FROM dbo.tblEmployeeTemporal;
+GO
+
+-- View the current data in the temporal table
+SELECT * FROM dbo.tblEmployeeTemporal2;
+
+GO
 
 /*
-    Update an employee's last name.
-    This action will trigger the temporal system 
-	to store the old version of the row in the history table.
+    Update the employee's last name.
+    This will cause SQL Server to archive the previous version in the history table.
 */
-UPDATE [dbo].[tblEmployeeTemporal]
+UPDATE [dbo].[tblEmployeeTemporal2]
 SET EmployeeLastName = 'Smith'
 WHERE EmployeeNumber = 124;
 
-/* Another update - this will again archive the previous version */
-UPDATE [dbo].[tblEmployeeTemporal]
+GO
+
+-- Second update to the same employee - previous row archived again
+UPDATE [dbo].[tblEmployeeTemporal2]
 SET EmployeeLastName = 'Albert'
 WHERE EmployeeNumber = 124;
 
-/* View current data (after updates) */
-SELECT * FROM dbo.tblEmployeeTemporal;
+GO
 
-/* 
-    Before dropping the table, you must disable system versioning.
-    This detaches the link between current and history tables.
+-- View the current version of the data
+SELECT * FROM dbo.tblEmployeeTemporal2;
+
+-- Optional: view history data
+SELECT * FROM dbo.tblEmployeeHistory2;
+
+GO
+
+/*
+    Before dropping the table, disable system versioning first.
+    This removes the system-versioning linkage between current and history tables.
 */
-ALTER TABLE [dbo].[tblEmployeeTemporal]
+ALTER TABLE [dbo].[tblEmployeeTemporal2]
 SET (SYSTEM_VERSIONING = OFF);
 
-/* Drop the current (temporal) table */
-DROP TABLE [dbo].[tblEmployeeTemporal];
+GO
 
-/* Drop the associated history table */
-DROP TABLE [dbo].[tblEmployeeHistory];
+-- Drop the main temporal table
+DROP TABLE [dbo].[tblEmployeeTemporal2];
+
+-- Drop the associated history table
+DROP TABLE [dbo].[tblEmployeeHistory2];
