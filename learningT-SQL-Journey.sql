@@ -2522,3 +2522,44 @@ ADD PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo);
 --Enable system versioning
 ALTER TABLE [dbo].[tblEmployee]
 SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory2]));
+
+-- Full Safe Migration via New Table
+--after Msg 13589, Level 16, State 1, Line 2513 known as limitation in SQL Server:
+--Column 'ValidFrom' in table '70-461.dbo.tblEmployee' cannot be specified as 'GENERATED ALWAYS' in ALTER COLUMN statement.
+-- Step 1: Create the temporal-ready table
+CREATE TABLE dbo.tblEmployeeNew (
+    EmployeeNumber INT NOT NULL PRIMARY KEY,
+    EmployeeFirstName VARCHAR(50) NOT NULL,
+    EmployeeMiddleName VARCHAR(50) NULL,
+    EmployeeLastName VARCHAR(50) NOT NULL,
+    EmployeeGovernmentID CHAR(10) NOT NULL,
+    DateOfBirth DATE NOT NULL,
+    Department VARCHAR(19) NULL,
+
+    ValidFrom DATETIME2(2) GENERATED ALWAYS AS ROW START NOT NULL,
+    ValidTo DATETIME2(2) GENERATED ALWAYS AS ROW END NOT NULL,
+    PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+)
+WITH (
+    SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.tblEmployeeHistory)
+);
+
+-- Step 2: Copy data from old table (excluding the system-time columns)
+INSERT INTO dbo.tblEmployeeNew (
+    EmployeeNumber, EmployeeFirstName, EmployeeMiddleName, EmployeeLastName,
+    EmployeeGovernmentID, DateOfBirth, Department
+)
+SELECT
+    EmployeeNumber, EmployeeFirstName, EmployeeMiddleName, EmployeeLastName,
+    EmployeeGovernmentID, DateOfBirth, Department
+FROM dbo.tblEmployee;
+
+-- EXEC sp_rename 'dbo.tblEmployee', 'tblEmployeeOld';
+-- EXEC sp_rename 'dbo.tblEmployeeNew', 'tblEmployee';
+
+
+
+
+
+
+
