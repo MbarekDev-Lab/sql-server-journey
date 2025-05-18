@@ -2550,12 +2550,38 @@ INSERT INTO dbo.tblEmployeeNew (
     EmployeeGovernmentID, DateOfBirth, Department
 )
 SELECT
-    EmployeeNumber, EmployeeFirstName, EmployeeMiddleName, EmployeeLastName,
+    EmployeeNumber, EmployeeFirstName, EmployeeLastName,
     EmployeeGovernmentID, DateOfBirth, Department
 FROM dbo.tblEmployee;
 
 -- EXEC sp_rename 'dbo.tblEmployee', 'tblEmployeeOld';
 -- EXEC sp_rename 'dbo.tblEmployeeNew', 'tblEmployee';
+
+--Querying temporal data at a point of time
+SELECT * 
+FROM sys.tables 
+WHERE name = 'tblEmployeeTemporal2';
+
+SELECT * 
+FROM dbo.tblEmployeeTemporal2
+FOR SYSTEM_TIME
+FROM '2020-01-01' TO '2024-01-01'
+WHERE EmployeeNumber = 124;
+
+SELECT * 
+FROM dbo.tblEmployeeTemporal2
+--FOR SYSTEM_TIME AS OF '2021-02-01'
+FOR SYSTEM_TIME AS OF '2021-02-01T00:00:00';
+
+SELECT *  
+FROM dbo.tblEmployeeTemporal2  
+FOR SYSTEM_TIME FROM '2020-01-01' TO '2021-02-15'
+WHERE EmployeeNumber = 124;
+
+
+
+
+
 
 
 
