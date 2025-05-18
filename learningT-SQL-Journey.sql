@@ -2469,3 +2469,56 @@ DROP TABLE [dbo].[tblEmployeeTemporal2];
 
 -- Drop the associated history table
 DROP TABLE [dbo].[tblEmployeeHistory2];
+
+
+--49 Alter Existing Table to Temporal Table
+-- Add temporal columns with constraints and default values
+ALTER TABLE [dbo].[tblEmployee]
+ADD
+    [ValidFrom] DATETIME2(2) GENERATED ALWAYS AS ROW START 
+        CONSTRAINT [DF_tblEmployee_ValidFrom] DEFAULT SYSUTCDATETIME(),
+
+    [ValidTo] DATETIME2(2) GENERATED ALWAYS AS ROW END 
+        CONSTRAINT [DF_tblEmployee_ValidTo] DEFAULT CONVERT(DATETIME2(2), '9999-12-31 23:59:59'),
+
+    PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo]);
+
+-- Step 2: Enable system versioning and specify the history table
+ALTER TABLE [dbo].[tblEmployee]
+SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory2]));
+--Error -> Msg 13575, Level 16, State 0, Line 2476
+-- ADD PERIOD FOR SYSTEM_TIME failed because table '70-461.dbo.tblEmployee' 
+-- contains records where end of period is not equal to MAX datetime.
+
+-- to fix the Problem SQL Server requires all existing rows to follow temporal rules, 
+
+-- Manually add ValidFrom and ValidTo (if not already added)
+ALTER TABLE [dbo].[tblEmployee]
+ADD 
+    ValidFrom DATETIME2(2) NOT NULL DEFAULT SYSUTCDATETIME(),
+    ValidTo   DATETIME2(2) NOT NULL DEFAULT CONVERT(DATETIME2(2), '9999-12-31 23:59:59');
+
+--Update existing rows to match system-versioned requirements
+UPDATE [dbo].[tblEmployee]
+SET ValidTo = CONVERT(DATETIME2(2), '9999-12-31 23:59:59');
+
+-- Convert the columns into system-versioned temporal columns
+ALTER TABLE [dbo].[tblEmployee]
+DROP CONSTRAINT [DF_tblEmployee_ValidFrom];
+
+ALTER TABLE [dbo].[tblEmployee]
+DROP CONSTRAINT [DF_tblEmployee_ValidTo];
+
+
+ALTER TABLE [dbo].[tblEmployee]
+ALTER COLUMN ValidFrom DATETIME2(2) GENERATED ALWAYS AS ROW START NOT NULL;
+
+ALTER TABLE [dbo].[tblEmployee]
+ALTER COLUMN ValidTo   DATETIME2(2) GENERATED ALWAYS AS ROW END NOT NULL;
+
+ALTER TABLE [dbo].[tblEmployee]
+ADD PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo);
+
+--Enable system versioning
+ALTER TABLE [dbo].[tblEmployee]
+SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory2]));
