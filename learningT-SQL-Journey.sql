@@ -2406,6 +2406,30 @@ WITH (
     SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory2])  -- Enable versioning and specify history table
 );
 
+--To make temporal columns hidden in SQL Server
+CREATE TABLE [dbo].[tblEmployeeTemporalColHidden] (
+    [EmployeeNumber] INT NOT NULL PRIMARY KEY CLUSTERED,
+    [EmployeeFirstName] VARCHAR(50) NOT NULL,
+    [EmployeeMiddleName] VARCHAR(50) NULL,
+    [EmployeeLastName] VARCHAR(50) NOT NULL,
+    [EmployeeGovernmentID] CHAR(10) NOT NULL,
+    [DateOfBirth] DATE NOT NULL,
+    [Department] VARCHAR(19) NULL,
+
+    -- Hidden system-versioned columns
+    [ValidFrom] DATETIME2(2) GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+    [ValidTo] DATETIME2(2) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+
+    PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
+)
+WITH (
+    SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[tblEmployeeHistory])
+);
+
+--HIDDEN hides the column from SELECT *, but you can still reference it explicitly:
+--SELECT ValidFrom, ValidTo FROM dbo.tblEmployeeTemporal;
+SELECT * FROM dbo.[tblEmployeeTemporalColHidden];
+
 GO
 
 /*
@@ -2608,6 +2632,53 @@ WHERE EmployeeNumber = 124;
 SELECT *  
 FROM dbo.tblEmployeeTemporal2  
 FOR SYSTEM_TIME ALL;
+
+-- SESSION /7/
+use [70-461S7]
+
+-- Update without an explicit transaction (auto-commit)
+update [dbo].[tblEmployee]
+set EmployeeNumber = 123
+where EmployeeNumber = 122;
+
+-- View current data
+select * from [dbo].[tblEmployee];
+
+-- Check active transactions (should be 0, no open tran)
+select @@TRANCOUNT;  -- Output: 0
+--Begin Transactions
+begin tran;
+	select @@TRANCOUNT;  -- Output: 1 (1 transaction started)
+
+	begin tran;
+	-- SQL Server supports **nested transaction counters**, but not truly nested transactions.
+	-- This just increases the counter, but there is still only one actual transaction.
+
+			update [dbo].[tblEmployee]
+			set EmployeeNumber = 122
+			where EmployeeNumber = 123;
+
+			select @@TRANCOUNT;  -- Output: 2 (counter increased)
+
+	--Commit Only One Level
+	commit tran;
+	select @@TRANCOUNT;  --  Output: 1 (one level committed, but transaction is still open)
+
+-- Conditionally Final Commit
+if @@TRANCOUNT > 0
+    commit tran;
+
+select @@TRANCOUNT;  --  Output: 0 (fully committed, transaction closed)
+
+select * from [dbo].[tblEmployee];
+
+
+
+
+
+
+
+
 
 
 
