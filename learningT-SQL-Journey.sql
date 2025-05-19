@@ -2673,6 +2673,38 @@ select @@TRANCOUNT;  --  Output: 0 (fully committed, transaction closed)
 select * from [dbo].[tblEmployee];
 
 
+-- Transaction block using BEGIN TRY...END TRY and BEGIN CATCH...END CATCH
+
+BEGIN TRY
+    BEGIN TRAN;
+
+    -- Sample update inside TRY block
+    UPDATE [dbo].[tblEmployee]
+    SET EmployeeNumber = 123
+    WHERE EmployeeNumber = 122;
+
+    -- Commit the transaction if no error
+    COMMIT;
+END TRY
+BEGIN CATCH
+    -- Rollback if a transaction is still open
+    IF @@TRANCOUNT > 0
+        ROLLBACK;
+
+    -- Optional: Return detailed error information
+    PRINT 'Error Number: ' + CAST(ERROR_NUMBER() AS VARCHAR);
+    PRINT 'Error Message: ' + ERROR_MESSAGE();
+    
+    -- Rethrow the error to propagate it up
+    THROW;
+END CATCH;
+
+-- Final check: display table content
+SELECT * FROM [dbo].[tblEmployee];
+
+
+
+
 
 
 
