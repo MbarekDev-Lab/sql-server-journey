@@ -2703,6 +2703,13 @@ END CATCH;
 SELECT * FROM [dbo].[tblEmployee];
 
 
+-- Scope and typs of locks waitfor statment
+BEGIN TRAN
+	SELECT * FROM [dbo].[tblEmployee]
+COMMIT TRAN
+
+
+
 
 
 
