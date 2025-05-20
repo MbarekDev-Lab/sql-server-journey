@@ -2842,7 +2842,6 @@ GO
 /*
   Lock Escalation Demonstration
 */
-
 -- Drop and recreate test table for escalation
 DROP TABLE IF EXISTS dbo.LockEscalationTest;
 GO
@@ -2937,6 +2936,60 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;   -- Allows dirty reads
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;    -- Prevents non-repeatable reads
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;       -- Full locking; prevents phantom reads
 SET TRANSACTION ISOLATION LEVEL SNAPSHOT;           -- Uses row versioning; avoids locks
+
+
+-- 48 Clustered Index
+--Create a Table with Clustered Index
+
+
+-- Create [tblEmployeeCluster] primary table
+CREATE TABLE [dbo].[tblEmployeeCluster] (
+    EmployeeNumber INT,
+    EmployeeFirstName VARCHAR(50),
+    EmployeeMiddleName VARCHAR(50),
+    EmployeeLastName VARCHAR(50),
+    EmployeeGovernmentID VARCHAR(50),
+    DateOfBirth DATE,
+    Department VARCHAR(50)
+);
+
+-- Create a clustered index (can only be one per table)
+CREATE CLUSTERED INDEX idx_tblEmployee 
+ON [dbo].[tblEmployee]([EmployeeNumber]);
+
+-- Drop the clustered index
+DROP INDEX idx_tblEmployee ON [dbo].[tblEmployee];
+
+--Copy Data to Another Table
+-- Copy selected data into a new table
+SELECT *
+INTO [dbo].[tblEmployee2]
+FROM [dbo].[tblEmployee]
+WHERE EmployeeNumber <> 131;
+
+-- Add a primary key constraint, which creates a clustered index by default
+ALTER TABLE [dbo].[tblEmployee2]
+ADD CONSTRAINT pk_tblEmployee2 PRIMARY KEY (EmployeeNumber);
+
+--Query the Table Using Index (Seek vs. Scan)
+-- Seek: optimized access if index exists
+SELECT * 
+FROM [dbo].[tblEmployee2]
+WHERE [EmployeeNumber] = 127;
+
+-- Scan: entire table read if WHERE clause doesn't match indexed column
+SELECT * 
+FROM [dbo].[tblEmployee2];
+
+-- Create another simple table with a primary key
+CREATE TABLE myTable (
+    Field1 INT PRIMARY KEY  -- Creates clustered index by default
+);
+
+
+
+
+
 
 
 
