@@ -2440,12 +2440,12 @@ INSERT INTO [dbo].[tblEmployeeTemporal2]
 ([EmployeeNumber], [EmployeeFirstName], [EmployeeMiddleName], [EmployeeLastName],
  [EmployeeGovernmentID], [DateOfBirth], [Department])
 VALUES
-(123, 'Jane', NULL, 'Zwilling', 'AB123456G', '1985-01-01', 'Customer Relations'),
-(124, 'Carolyn', 'Andrea', 'Zimmerman', 'AB234578H', '1975-06-01', 'Commercial'),
-(125, 'Jane', NULL, 'Zabokritski', 'LUT778728T', '1977-12-09', 'Commercial'),
-(126, 'Ken', 'J', 'Yukish', 'PO201903O', '1969-12-27', 'HR'),
-(127, 'Terri', 'Lee', 'Yu', 'ZH206496W', '1986-11-14', 'Customer Relations'),
-(128, 'Roberto', NULL, 'Young', 'EH793082D', '1967-04-05', 'Customer Relations');
+	(123, 'Jane', NULL, 'Zwilling', 'AB123456G', '1985-01-01', 'Customer Relations'),
+	(124, 'Carolyn', 'Andrea', 'Zimmerman', 'AB234578H', '1975-06-01', 'Commercial'),
+	(125, 'Jane', NULL, 'Zabokritski', 'LUT778728T', '1977-12-09', 'Commercial'),
+	(126, 'Ken', 'J', 'Yukish', 'PO201903O', '1969-12-27', 'HR'),
+	(127, 'Terri', 'Lee', 'Yu', 'ZH206496W', '1986-11-14', 'Customer Relations'),
+	(128, 'Roberto', NULL, 'Young', 'EH793082D', '1967-04-05', 'Customer Relations');
 
 GO
 
@@ -2702,11 +2702,57 @@ END CATCH;
 -- Final check: display table content
 SELECT * FROM [dbo].[tblEmployee];
 
-
 -- Scope and typs of locks waitfor statment
 BEGIN TRAN
 	SELECT * FROM [dbo].[tblEmployee]
 COMMIT TRAN
+
+--Scope of Locks(In SQL Server, locks are used to ensure transactional consistency and concurrency control.)
+
+| Lock Scope     | Description                                                                 |
+| -------------- | --------------------------------------------------------------------------- |
+| Row-level      | Locks a single row. Very fine-grained; used for high concurrency.           |
+| Page-level     | Locks an 8KB page (may include multiple rows).                              |
+| Table-level    | Locks the entire table. Least concurrent; used when many rows are affected. |
+| Key-level      | Applied in indexes to lock a specific key range.                            |
+| Extent-level   | Locks 8 contiguous pages (rare).                                            |
+| Database-level | Rare, only during operations like backups or maintenance.                   |
+
+-- Types of Locks
+--SQL Server uses different lock types depending on the operation:
+| Lock Type           | Description                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| Shared (S)          | For read operations (SELECT). Multiple shared locks can coexist.          |
+| Exclusive (X)       | For write operations (INSERT, UPDATE, DELETE). Prevents other access.     |
+| Update (U)          | Used during updates, to prevent deadlocks (intermediate between S and X). |
+| Intent (IS, IX, IU) | Signifies intent to acquire a lower-level lock. Helps lock hierarchy.     |
+| Schema              | Acquired when schema changes occur (DDL operations).                      |
+| Bulk Update (BU)    | For bulk insert operations.                                               |
+
+--WAITFOR Statement
+--The WAITFOR statement delays execution. Useful for simulating locks or testing.
+
+BEGIN TRAN;
+UPDATE dbo.tblEmployee
+SET EmployeeFirstName = 'BlockingUser'
+WHERE EmployeeNumber = 123;
+
+-- Hold the lock for 1 minute
+WAITFOR DELAY '00:01:00';
+-- COMMIT later (manual or after delay)
+
+UPDATE dbo.tblEmployee
+SET EmployeeFirstName = 'BlockedUser'
+WHERE EmployeeNumber = 123;
+
+--Check Blocking: Who is blocking whom?
+SELECT 
+    blocking_session_id AS Blocker,
+    session_id AS Blocked,
+    wait_type, wait_time, wait_resource
+FROM sys.dm_exec_requests
+WHERE blocking_session_id <> 0;
+
 
 
 
