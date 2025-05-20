@@ -2753,6 +2753,137 @@ SELECT
 FROM sys.dm_exec_requests
 WHERE blocking_session_id <> 0;
 
+/* 
+ -- Create Table and Insert Data
+*/
+
+DROP TABLE IF EXISTS dbo.LockTest;
+GO
+
+CREATE TABLE dbo.LockTest (
+    ID INT PRIMARY KEY,
+    Name VARCHAR(50)
+);
+
+INSERT INTO dbo.LockTest (ID, Name)
+VALUES (1, 'Alice'), (2, 'Bob');
+GO
+
+
+/*
+ Blocking Simulation - Run in Session 1
+*/
+
+-- Begin a transaction and hold a lock on ID = 1
+BEGIN TRAN;
+
+UPDATE dbo.LockTest
+SET Name = 'BlockingUser'
+WHERE ID = 1;
+
+-- Hold the lock for 1 minute (simulate long-running transaction)
+WAITFOR DELAY '00:01:00';
+
+-- After delay, commit manually to release lock
+-- COMMIT;
+GO
+
+
+/*
+ Blocking Test - Run in Session 2
+*/
+
+-- This will be BLOCKED until Session 1 commits
+UPDATE dbo.LockTest
+SET Name = 'BlockedUser'
+WHERE ID = 1;
+GO
+
+
+/*
+ Monitor Blocking - Run in Session 3
+*/
+
+-- Check blocking status (run repeatedly during blocking)
+SELECT
+    r.session_id AS BlockedSession,
+    r.blocking_session_id AS BlockedBy,
+    r.status,
+    r.wait_type,
+    r.wait_time,
+    r.command
+FROM sys.dm_exec_requests r
+WHERE r.blocking_session_id <> 0;
+GO
+
+
+/*
+ Deadlock Simulation - Use Two Sessions
+*/
+
+-- Session 1
+BEGIN TRAN;
+UPDATE dbo.LockTest SET Name = 'A1' WHERE ID = 1;
+-- Wait for Session 2 to take a lock on ID = 2
+
+-- Then:
+UPDATE dbo.LockTest SET Name = 'A2' WHERE ID = 2; -- This will deadlock if Session 2 tries reverse
+-- COMMIT;
+
+-- Session 2
+BEGIN TRAN;
+UPDATE dbo.LockTest SET Name = 'B2' WHERE ID = 2;
+-- Then:
+UPDATE dbo.LockTest SET Name = 'B1' WHERE ID = 1; -- Deadlock risk
+-- COMMIT;
+GO
+
+
+/*
+  Lock Escalation Demonstration
+*/
+
+-- Drop and recreate test table for escalation
+DROP TABLE IF EXISTS dbo.LockEscalationTest;
+GO
+
+CREATE TABLE dbo.LockEscalationTest (
+    ID INT PRIMARY KEY,
+    Data CHAR(100)
+);
+
+-- Insert many rows to force lock escalation
+INSERT INTO dbo.LockEscalationTest
+SELECT TOP 10000 ROW_NUMBER() OVER (ORDER BY (SELECT NULL)), 'Sample'
+FROM sys.all_objects a, sys.all_objects b;
+GO
+
+-- Start transaction and update many rows
+BEGIN TRAN;
+
+UPDATE dbo.LockEscalationTest
+SET Data = 'Updated'
+WHERE ID <= 10000;
+
+-- Check current locks (look for escalation to table-level)
+SELECT resource_type, request_mode, request_status
+FROM sys.dm_tran_locks
+WHERE request_session_id = @@SPID;
+
+-- COMMIT after verification
+-- COMMIT;
+GO
+
+
+
+
+
+
+
+
+
+
+
 
 
 
