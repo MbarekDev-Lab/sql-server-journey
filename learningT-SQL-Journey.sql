@@ -2875,6 +2875,73 @@ WHERE request_session_id = @@SPID;
 GO
 
 
+--   Transaction Isolation Levels in SQL Server
+
+-- Transaction 1 – Writer (Session 1) 
+-- This transaction makes modifications to test isolation effects
+
+BEGIN TRAN;
+
+-- Modify existing record (creates lock)
+UPDATE [dbo].[tblEmployee]
+SET EmployeeNumber = 122
+WHERE EmployeeNumber = 123;
+
+-- Commit the change
+COMMIT;
+
+-- Make another change after first transaction
+UPDATE [dbo].[tblEmployee]
+SET EmployeeNumber = 123
+WHERE EmployeeNumber = 122;
+
+-- Insert new row
+INSERT INTO [dbo].[tblEmployee] (
+    [EmployeeNumber],
+    [EmployeeFirstName],
+    [EmployeeMiddleName],
+    [EmployeeLastName],
+    [EmployeeGovernmentID],
+    [DateOfBirth],
+    [Department]
+)
+VALUES (122, 'H', 'I', 'T', 'H', '2010-01-01', 'H');
+
+-- Delete that row
+DELETE FROM [dbo].[tblEmployee]
+WHERE EmployeeNumber = 122;
+
+-- Transaction 2 – Reader (Session 2)
+-- This simulates reading during concurrent writes
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;  -- Default level
+
+BEGIN TRAN;
+
+-- Read before writer changes
+SELECT * FROM [dbo].[tblEmployee];
+
+-- Pause to allow Session 1 to make changes
+WAITFOR DELAY '00:00:20';
+
+-- Read again to observe if changes are visible now
+SELECT * FROM [dbo].[tblEmployee];
+
+COMMIT;
+
+--Under READ COMMITTED, Session 2 will block if Session 1 is modifying rows and hasn’t committed yet.
+--If Session 1 commits between the two reads in Session 2, the second SELECT will reflect new data.
+--This avoids dirty reads but still allows non-repeatable reads (values might change between reads in the same transaction).
+
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;   -- Allows dirty reads
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;    -- Prevents non-repeatable reads
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;       -- Full locking; prevents phantom reads
+SET TRANSACTION ISOLATION LEVEL SNAPSHOT;           -- Uses row versioning; avoids locks
+
+
+
+
+
 
 
 
