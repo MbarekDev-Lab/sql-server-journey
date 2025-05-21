@@ -2937,10 +2937,13 @@ SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;    -- Prevents non-repeatable r
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;       -- Full locking; prevents phantom reads
 SET TRANSACTION ISOLATION LEVEL SNAPSHOT;           -- Uses row versioning; avoids locks
 
+-- HEAP
+CREATE TABLE tblDemoHeap 
+(field1 int ,
+field2 int )
 
 -- 48 Clustered Index
 --Create a Table with Clustered Index
-
 
 -- Create [tblEmployeeCluster] primary table
 CREATE TABLE [dbo].[tblEmployeeCluster] (
@@ -2952,13 +2955,6 @@ CREATE TABLE [dbo].[tblEmployeeCluster] (
     DateOfBirth DATE,
     Department VARCHAR(50)
 );
-
--- Create a clustered index (can only be one per table)
-CREATE CLUSTERED INDEX idx_tblEmployee 
-ON [dbo].[tblEmployee]([EmployeeNumber]);
-
--- Drop the clustered index
-DROP INDEX idx_tblEmployee ON [dbo].[tblEmployee];
 
 --Copy Data to Another Table
 -- Copy selected data into a new table
@@ -2985,6 +2981,9 @@ FROM [dbo].[tblEmployee2];
 CREATE TABLE myTable (
     Field1 INT PRIMARY KEY  -- Creates clustered index by default
 );
+
+
+
 
 
 
