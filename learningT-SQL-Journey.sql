@@ -2956,6 +2956,22 @@ CREATE TABLE [dbo].[tblEmployeeCluster] (
     Department VARCHAR(50)
 );
 
+-- Create a clustered index (can only be one per table)
+CREATE CLUSTERED INDEX idx_tblEmployee 
+ON [dbo].[tblEmployee]([EmployeeNumber]);
+
+-- if i drop the index the search back to scann
+DROP INDEX  idx_tblEmployee ON  [dbo].[tblEmployee]
+
+SELECT * FROM [dbo].[tblEmployee] --INDEX SCAN
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] =127  --INDEX SEEK
+
+ALTER TABLE [dbo].[tblEmployee] ADD CONSTRAINT pk_tblEmployee PRIMARY KEY([EmployeeNumber])
+--The CREATE UNIQUE INDEX statement terminated because a duplicate key was found for the object name 'dbo.tblEmployee' and the index name 'pk_tblEmployee'. The duplicate key value is (131).
+
+-- Drop the clustered index
+DROP INDEX idx_tblEmployee ON [dbo].[tblEmployee];
+
 --Copy Data to Another Table
 -- Copy selected data into a new table
 SELECT *
