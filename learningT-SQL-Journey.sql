@@ -2972,7 +2972,7 @@ ALTER TABLE [dbo].[tblEmployee] ADD CONSTRAINT pk_tblEmployee PRIMARY KEY([Emplo
 -- Drop the clustered index
 DROP INDEX idx_tblEmployee ON [dbo].[tblEmployee];
 
---Copy Data to Another Table
+-- Copy Data to Another Table
 -- Copy selected data into a new table
 SELECT *
 INTO [dbo].[tblEmployee2]
@@ -2997,6 +2997,41 @@ FROM [dbo].[tblEmployee2];
 CREATE TABLE myTable (
     Field1 INT PRIMARY KEY  -- Creates clustered index by default
 );
+
+--QUIZ
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,   -- Creates a clustered index by default
+    FirstName NVARCHAR(50),
+    LastName NVARCHAR(50)
+);
+
+--The script will fail at the ALTER TABLE step because you are trying to add a PRIMARY KEY constraint on Field1, but the table contains duplicate values 
+--(3 appears twice). A primary key requires all values to be unique and not null.
+CREATE TABLE #tblDemo
+(Field1 INT NOT NULL);
+INSERT INTO #tblDemo(Field1)
+VALUES (1), (2), (3), (3), (4);  -- Duplicate value: 3
+
+ALTER TABLE #tblDemo
+ADD CONSTRAINT pk_tblDemo PRIMARY KEY(Field1);  --  Error: Duplicate values
+
+
+--fix it
+DELETE FROM #tblDemo
+WHERE Field1 NOT IN (
+    SELECT MIN(Field1)
+    FROM #tblDemo
+    GROUP BY Field1
+);
+
+ALTER TABLE #tblDemo
+ADD CONSTRAINT pk_tblDemo PRIMARY KEY(Field1);
+
+
+
+
+
+
 
 
 
