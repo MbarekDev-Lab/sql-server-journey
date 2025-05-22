@@ -3,3 +3,5 @@ UPDATE [dbo].[tblEmployee]  SET [EmployeeNumber] = 122 WHERE [EmployeeNumber] = 
 WAITFOR DELAY '00:00:10';
 
 rollback tran
+
+

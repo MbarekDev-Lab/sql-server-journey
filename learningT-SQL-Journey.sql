@@ -2998,14 +2998,16 @@ CREATE TABLE myTable (
     Field1 INT PRIMARY KEY  -- Creates clustered index by default
 );
 
---QUIZ
+--QUIZ 62 CLUSTERED INDEX
+
 CREATE TABLE Employees (
     EmployeeID INT PRIMARY KEY,   -- Creates a clustered index by default
     FirstName NVARCHAR(50),
     LastName NVARCHAR(50)
 );
 
---The script will fail at the ALTER TABLE step because you are trying to add a PRIMARY KEY constraint on Field1, but the table contains duplicate values 
+--The script will fail at the ALTER TABLE step because you are trying 
+--to add a PRIMARY KEY constraint on Field1, but the table contains duplicate values 
 --(3 appears twice). A primary key requires all values to be unique and not null.
 CREATE TABLE #tblDemo
 (Field1 INT NOT NULL);
@@ -3014,9 +3016,7 @@ VALUES (1), (2), (3), (3), (4);  -- Duplicate value: 3
 
 ALTER TABLE #tblDemo
 ADD CONSTRAINT pk_tblDemo PRIMARY KEY(Field1);  --  Error: Duplicate values
-
-
---fix it
+--to fix it
 DELETE FROM #tblDemo
 WHERE Field1 NOT IN (
     SELECT MIN(Field1)
@@ -3026,6 +3026,67 @@ WHERE Field1 NOT IN (
 
 ALTER TABLE #tblDemo
 ADD CONSTRAINT pk_tblDemo PRIMARY KEY(Field1);
+
+
+-- Will this create a valid CLUSTERED INDEX?
+    CREATE TABLE #tblDemo (Field1 INT NOT NULL)
+    INSERT INTO #tblDemo(Field1)
+    VALUES (1), (2), (3), (3), (4)
+    CREATE CLUSTERED INDEX idx_tblDemo on #tblDemo(Field1)
+-- Answer Yes, this will create a valid CLUSTERED INDEX , even with duplicate values 
+-- because a CLUSTERED INDEX does not require uniqueness by default.
+
+-- Unlike a PRIMARY KEY, which must be unique,
+-- a CLUSTERED INDEX can contain duplicates unless specified as UNIQUE.
+
+SELECT * FROM #tblDemo ORDER BY Field1;
+CREATE UNIQUE CLUSTERED INDEX idx_tblDemo ON #tblDemo(Field1); -- Will fail due to duplicates
+
+-- CLUSTERED INDEX does not require uniqueness among the indexed values. This means that you can create a CLUSTERED INDEX 
+-- on a column with duplicate entries, allowing for efficient data organization and retrieval.
+
+CREATE CLUSTERED INDEX idx_Field1 ON MyTable(Field1); -- duplicates allowed
+CREATE UNIQUE CLUSTERED INDEX idx_Field1 ON MyTable(Field1); -- duplicates NOT allowed
+
+--Question 4:
+--As clustered indexes physically re-order the data, can you have more than one clustered index in a single table?
+--Answer No,it cannot have more than one clustered index on a single table in SQL Server.
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,  -- This creates a clustered index by default
+    LastName NVARCHAR(100),
+    DepartmentID INT
+);
+-- Try to create another clustered index
+CREATE CLUSTERED INDEX idx_Dept ON Employees(DepartmentID);--This will fail: Cannot create more than one clustered index on table 'Employees'.
+--> instead we should use 
+--Use multiple non-clustered indexes:
+CREATE NONCLUSTERED INDEX idx_Dept ON Employees(DepartmentID);
+
+--Use included columns or composite indexes:
+CREATE NONCLUSTERED INDEX idx_DeptInc ON Employees(DepartmentID) INCLUDE (LastName);
+
+-- Change the clustered index to a different column:
+DROP INDEX PK_Employees ON Employees;
+CREATE CLUSTERED INDEX idx_Dept ON Employees(DepartmentID);
+
+
+--PRIMARY KEY  vs CLUSTERED INDEX Attempt
+CREATE TABLE #tblDemo(Field1 INT NOT NULL);
+INSERT INTO #tblDemo(Field1)
+VALUES (1), (2), (3), (3), (4);
+ALTER TABLE #tblDemo
+ADD CONSTRAINT pk_tblDemo PRIMARY KEY(Field1); --This will fail becaise , A PRIMARY KEY constraint must enforce uniqueness.
+
+--CLUSTERED INDEX Attempt
+CREATE TABLE #tblDemo(Field1 INT NOT NULL);
+INSERT INTO #tblDemo(Field1)
+VALUES (1), (2), (3), (3), (4);
+CREATE CLUSTERED INDEX idx_tblDemo on #tblDemo(Field1);--This will succeed: A clustered index does not require uniqueness by default.
+
+
+
+
+
 
 
 
