@@ -3084,6 +3084,50 @@ VALUES (1), (2), (3), (3), (4);
 CREATE CLUSTERED INDEX idx_tblDemo on #tblDemo(Field1);--This will succeed: A clustered index does not require uniqueness by default.
 
 
+--Non-clustered Index
+-- Create Non-Clustered Indexes :
+-- Single-column non-clustered index
+CREATE NONCLUSTERED INDEX idx_tblEmployee_DateOfBirth 
+ON [dbo].[tblEmployee] ([DateOfBirth]);
+
+-- Multi-column non-clustered index (composite index)
+CREATE NONCLUSTERED INDEX idx_tblEmployee_DateOfBirth_Department 
+ON [dbo].[tblEmployee] ([DateOfBirth], Department);
+
+-- Drop an Index :
+DROP INDEX idx_tblEmployee_DateOfBirth ON [dbo].[tblEmployee];
+
+
+-- Selects for Seek vs Scan Demonstration :
+-- Likely uses index seek (if indexed on EmployeeNumber)
+SELECT * 
+FROM [dbo].[tblEmployee2] 
+WHERE [EmployeeNumber] = 127;
+
+-- No filter = full scan
+SELECT * 
+FROM [dbo].[tblEmployee2];
+
+-- Likely uses index seek on DateOfBirth or composite index
+SELECT DateOfBirth, Department
+FROM [dbo].[tblEmployee]
+WHERE DateOfBirth >= '1992-01-01' AND DateOfBirth < '1993-01-01';
+
+-- Add Unique Constraint :
+-- Ensures Department names are unique
+ALTER TABLE [dbo].[tblDepartment]
+ADD CONSTRAINT unq_tblDepartment UNIQUE(Department);
+
+| Concept               | Explanation                                                                  |
+| --------------------- | ---------------------------------------------------------------------------- |
+|  Non-Clustered Index  | Logical structure for faster lookups, doesn't affect physical row order.     |
+|  Index Seek           | Efficient; used when index helps directly locate rows.                       |
+|  Index Scan           | Reads the entire index; happens when filter is broad or index is not useful. |
+|  UNIQUE constraint    | Enforces uniqueness and creates a unique non-clustered index.                |
+
+
+
+
 
 
 
