@@ -3120,12 +3120,64 @@ ADD CONSTRAINT unq_tblDepartment UNIQUE(Department);
 
 | Concept               | Explanation                                                                  |
 | --------------------- | ---------------------------------------------------------------------------- |
-|  Non-Clustered Index  | Logical structure for faster lookups, doesn't affect physical row order.     |
+|  Non-Clustered Index  | Logical structure for faster lookups, doesn t affect physical row order.     |
 |  Index Seek           | Efficient; used when index helps directly locate rows.                       |
 |  Index Scan           | Reads the entire index; happens when filter is broad or index is not useful. |
 |  UNIQUE constraint    | Enforces uniqueness and creates a unique non-clustered index.                |
 
 
+--49 Non-clustered Index :
+-- Drop existing index if it exists
+DROP INDEX IF EXISTS idx_tblEmployee_DateOfBirth ON [dbo].[tblEmployee];
+DROP INDEX IF EXISTS idx_tblEmployee_DateOfBirth_Department ON [dbo].[tblEmployee];
+
+-- Create Non-Clustered Index on a single column
+CREATE NONCLUSTERED INDEX idx_tblEmployee_DateOfBirth 
+ON [dbo].[tblEmployee]([DateOfBirth]);
+
+-- Create Composite Non-Clustered Index
+CREATE NONCLUSTERED INDEX idx_tblEmployee_DateOfBirth_Department 
+ON [dbo].[tblEmployee]([DateOfBirth], Department);
+
+-- Attempting to drop an index (example — only drop if it exists)
+DROP INDEX IF EXISTS idx_tblEmployee ON [dbo].[tblEmployee];
+
+-- Query optimized by index (Seek vs. Scan demo)
+-- Seek: uses index if WHERE condition is selective and matches index key
+SELECT * 
+FROM [dbo].[tblEmployee2] 
+WHERE [EmployeeNumber] = 127;
+
+-- Scan: will occur when WHERE clause is absent or not selective
+SELECT * 
+FROM [dbo].[tblEmployee2];
+
+-- Filtered search using index
+SELECT DateOfBirth, Department
+FROM [dbo].[tblEmployee]
+WHERE DateOfBirth >= '1992-01-01' 
+  AND DateOfBirth < '1993-01-01';
+
+-- Seek = Efficient access using index (narrow range or equality)
+-- Scan = Full table/index traversal (less efficient)
+
+-- Add a UNIQUE constraint to enforce unique values in Department column
+ALTER TABLE [dbo].[tblDepartment]
+ADD CONSTRAINT unq_tblDepartment UNIQUE(Department);
+
+-- Create a Filtered Index (non-clustered) — excellent for selective queries
+CREATE NONCLUSTERED INDEX idx_tblEmployee_Employee
+ON dbo.tblEmployee(EmployeeNumber)
+WHERE EmployeeNumber < 139;
+
+| Concept                 | Explanation                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| Non-Clustered Index     | A separate structure from the table that speeds up queries by maintaining pointers to the actual rows. |
+| Composite Index         | An index on multiple columns. Useful when queries filter/sort by both columns.                         |
+| Filtered Index          | Indexes only a subset of data based on a  WHERE  clause. Great for large tables with sparse queries.   |
+| Seek                    | Uses index efficiently to find rows.                                                                   |
+| Scan                    | Walks the entire index/table when no good index is available.                                          |
+| Unique Constraint       | Prevents duplicate values in a column, automatically backed by a unique index.                         |
 
 
 
