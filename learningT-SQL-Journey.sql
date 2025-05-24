@@ -3333,6 +3333,40 @@ JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber
 
 
 
+-- 53 SARGability (Search ARGument Able) in SQL Server.
+-- Even bigger savings of time when using a SARG
+-- A SARGable predicate allows SQL Server to effectively use indexes. These are typically comparisons like:
+
+WHERE Column = value
+WHERE Column BETWEEN x AND y
+WHERE Column LIKE 'abc%' -- (starts with only)
+-->Non-SARGable predicates prevent index usage and force table or index scans.
+
+--SARGable: Efficient Index Seek
+WHERE E.EmployeeNumber = 134 --Uses an index seek if EmployeeNumber is indexed.
+
+--Non-SARGable: Forces Full Scan
+WHERE E.EmployeeNumber / 10 = 34 --SQL Server cannot use an index on EmployeeNumber because it’s inside a function (/ 10).
+
+--BETWEEN: Still SARGable
+WHERE E.EmployeeNumber BETWEEN 340 AND 349 --SQL Server can perform a range seek using the index.
+
+| Query Condition     | SARGable? | Index Used? | Expected Performance |
+| ------------------- | --------- | ----------- | -------------------- |
+| = 134               | Yes       | Yes         |  Fast                |
+| / 10 = 34           | No        | No          |  Slow (scan)         |
+| BETWEEN 340 AND 349 | Yes       | Yes         |  Very Fast           |
+
+--Avoid wrapping columns in functions, arithmetic, or CASTs in WHERE clauses.
+--Design your indexes to support the most common SARGable predicates.
+--Use covering indexes if you’re selecting multiple columns.
+
+
+
+
+
+
+
 
 
 
