@@ -3337,6 +3337,38 @@ JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber
 -- Even bigger savings of time when using a SARG
 -- A SARGable predicate allows SQL Server to effectively use indexes. These are typically comparisons like:
 
+--  SARGable: Uses index seek (if available)
+SELECT E.EmployeeNumber,  T.Amount
+FROM  dbo.tblEmployee AS E
+LEFT JOIN dbo.tblTransaction AS T  ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber = 134;
+
+-- No index: Same logic as above but runs slower due to lack of indexing
+SELECT E.EmployeeNumber, T.Amount
+FROM dbo.tblEmployeeNoIndex AS E
+LEFT JOIN dbo.tblTransactionNoIndex AS T ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber = 134;
+
+--  Not SARGable: Expression prevents index usage
+SELECT E.EmployeeNumber, T.Amount
+FROM dbo.tblEmployee AS E
+LEFT JOIN dbo.tblTransaction AS T ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber / 10 = 34;--Not SARGable
+
+--  Not SARGable: Expression prevents index usage
+SELECT E.EmployeeNumber, T.Amount
+FROM dbo.tblEmployee AS E
+LEFT JOIN dbo.tblTransaction AS T ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber / 10 = 34;--Not SARGable
+ORDER BY Amount --ORDER BY Amount further increase execution time
+
+--  SARGable: Range query optimized with index seek
+SELECT E.EmployeeNumber,  T.Amount
+FROM dbo.tblEmployee AS E
+LEFT JOIN dbo.tblTransaction AS T ON E.EmployeeNumber = T.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 340 AND 349;--SARGable
+
+
 WHERE Column = value
 WHERE Column BETWEEN x AND y
 WHERE Column LIKE 'abc%' -- (starts with only)
