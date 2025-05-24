@@ -3180,6 +3180,117 @@ WHERE EmployeeNumber < 139;
 | Scan                    | Walks the entire index/table when no good index is available.                                          |
 | Unique Constraint       | Prevents duplicate values in a column, automatically backed by a unique index.                         |
 
+-- INCLUDE :
+-- Create Non-Clustered Index with INCLUDE ( index on EmployeeNumber)
+/*The INCLUDE clause allows additional columns to be added to the leaf level of the index 
+they are not part of the key but can be returned by the index, avoiding expensive lookups to the base table*/
+
+-- Create a non-clustered index on EmployeeNumber
+-- Include EmployeeFirstName in the index leaf level to avoid key lookups
+CREATE NONCLUSTERED INDEX idx_tblEmployee_Employee
+ON dbo.tblEmployee(EmployeeNumber)
+INCLUDE (EmployeeFirstName);
+
+-- Drop the index when it's no longer needed
+DROP INDEX idx_tblEmployee_Employee ON dbo.tblEmployee;
+
+| Clause                      | Purpose                                                                   |
+| --------------------------- | ------------------------------------------------------------------------- |
+| CREATE NONCLUSTERED INDEX   | Creates a secondary index that does not affect the physical row order.    |
+| INCLUDE                     | Adds non-key columns to the index leaf for performance (reduces lookups). |
+| DROP INDEX                  | Removes the specified index from the table.                               |
+
+
+-- Include Client Statistics
+SELECT * 
+FROM [dbo].[tblEmployee];
+
+-- Create a non-clustered index if it doesn't already exist
+CREATE NONCLUSTERED INDEX idx_tblEmployee_EmployeeNumber
+ON dbo.tblEmployee(EmployeeNumber);
+
+--Rerun Your Query with SET STATISTICS IO and TIME
+SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+
+SELECT *
+FROM [dbo].[tblEmployee] AS E
+WHERE E.EmployeeNumber = 134;
+
+-- Make sure the table has many rows for meaningful testing
+SELECT COUNT(*) FROM dbo.tblEmployee;
+
+-- Then run:
+SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+SELECT EmployeeFirstName, EmployeeLastName
+FROM dbo.tblEmployee
+WHERE EmployeeNumber = 134;
+
+
+-- 50 Hash match: 
+SELECT *
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E
+ON D.Department = E.Department;
+
+-- Or more specific version A Hash Match Join is used by SQL Server when no useful index exists on the join column(s).
+--It builds a hash table in memory on the smaller input (usually the left side) and probes the larger one.
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department;
+
+-- Optimize It to Use a Merge Join or Nested Loops Join On Department table (if it's not already a PK or unique)
+CREATE NONCLUSTERED INDEX idx_Department ON dbo.tblDepartment(Department);
+
+-- On Employee table
+CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
+
+--Update Statistics (Optional can be Helpful)
+UPDATE STATISTICS dbo.tblDepartment;
+UPDATE STATISTICS dbo.tblEmployee;
+
+--Filtering before joining can also help:
+-- If you want only employees in departments
+SELECT D.Department, D.DepartmentHead,E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM dbo.tblDepartment AS D JOIN dbo.tblEmployee AS E
+ON D.Department = E.Department;
+
+--Nested Loop (A Nested Loop Join works by looping over one input (usually the smaller table or a filtered result) and looking up matches in the other.)
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+WHERE D.Department = 'HR'; -- nested loop
+
+SELECT * 
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 131;
+delete from [dbo].[tblEmployee] where  [EmployeeNumber] = 131 and [DateOfBirth] = '1980-08-01'
+
+select [EmployeeNumber] , count(*) from [dbo].[tblEmployee] group by [EmployeeNumber] having count(*)>1
+
+--Simple Join (Might Use Hash Join if Tables Are Big)
+
+SELECT * FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+--Narrow Column Selection Helps
+SELECT E.EmployeeNumber, T.Amount
+FROM [dbo].[tblEmployee] AS E 
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+
+-- Helpful indexes (For optimal performance with Nested Loops)
+CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
+CREATE NONCLUSTERED INDEX idx_Transaction_EmployeeNumber ON dbo.tblTransaction(EmployeeNumber);
+
+
+
+
+
+
 
 
 
