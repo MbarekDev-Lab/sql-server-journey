@@ -3288,6 +3288,54 @@ LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
 CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
 CREATE NONCLUSTERED INDEX idx_Transaction_EmployeeNumber ON dbo.tblTransaction(EmployeeNumber);
 
+--52 Merge Joins SQL 
+/*A Merge Join is very efficient for joining two large, sorted datasets. 
+SQL Server will only use it if both input sets are sorted on the join key 
+typically via clustered indexes or explicitly sorted subqueries, To increas Server performance! */
+
+--Merge Join Expected (Indexed Tables)
+CREATE UNIQUE CLUSTERED INDEX [idx_tblEmployee] 
+ON [dbo].[tblEmployee]([EmployeeNumber]);
+
+CREATE UNIQUE CLUSTERED INDEX [idx_tblTransaction] 
+ON [dbo].[tblTransaction]([EmployeeNumber], [DateOfTransaction], [Amount]);
+
+SELECT E.EmployeeNumber, T.Amount
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+--SQL Server will likely use a Merge Join, as it can walk both sorted datasets once and match rows efficiently.
+--Performance: Excellent for large datasets with proper indexing.
+
+--other way No Indexes (Expect Hash Join)
+SELECT * INTO dbo.tblEmployeeNoIndex FROM dbo.tblEmployee;
+SELECT * INTO dbo.tblTransactionNoIndex FROM dbo.tblTransaction;
+-- This creates heap tables (NoIndex) without any sorting/indexing.
+
+SELECT E.EmployeeNumber, T.Amount
+FROM [dbo].[tblEmployeeNoIndex] AS E
+LEFT JOIN [dbo].[tblTransactionNoIndex] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+--These tables are not sorted, so a Merge Join is not possible.
+--SQL Server will likely use a Hash Match Join instead.
+--Performance: Lower, especially for large datasets.
+
+| Join Type       | Triggered By                                    | Best For                          |
+| --------------- | ----------------------------------------------- | --------------------------------- |
+| Merge Join      | Both inputs sorted (usually by clustered index) | Large datasets, minimal filtering |
+| Nested Loop     | Small outer input & indexed inner input         | Small/targeted queries            |
+| Hash Match      | No sorted input or useful indexes               | Large unsorted datasets           |
+
+--To force SQL Server to try Merge Join... :
+SELECT E.EmployeeNumber, T.Amount
+FROM [dbo].[tblEmployee] AS E
+JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber 
+OPTION (MERGE JOIN);  -- OR OPTION (HASH JOIN) OR OPTION (LOOP JOIN)
+
+
+
+
+
+
+
 
 
 
