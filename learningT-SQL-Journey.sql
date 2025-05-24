@@ -3229,6 +3229,62 @@ FROM dbo.tblEmployee
 WHERE EmployeeNumber = 134;
 
 
+-- 50 Hash match: 
+SELECT *
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E
+ON D.Department = E.Department;
+
+-- Or more specific version A Hash Match Join is used by SQL Server when no useful index exists on the join column(s).
+--It builds a hash table in memory on the smaller input (usually the left side) and probes the larger one.
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department;
+
+-- Optimize It to Use a Merge Join or Nested Loops Join On Department table (if it's not already a PK or unique)
+CREATE NONCLUSTERED INDEX idx_Department ON dbo.tblDepartment(Department);
+
+-- On Employee table
+CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
+
+--Update Statistics (Optional can be Helpful)
+UPDATE STATISTICS dbo.tblDepartment;
+UPDATE STATISTICS dbo.tblEmployee;
+
+--Filtering before joining can also help:
+-- If you want only employees in departments
+SELECT D.Department, D.DepartmentHead,E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM dbo.tblDepartment AS D JOIN dbo.tblEmployee AS E
+ON D.Department = E.Department;
+
+--Nested Loop (A Nested Loop Join works by looping over one input (usually the smaller table or a filtered result) and looking up matches in the other.)
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+WHERE D.Department = 'HR'; -- nested loop
+
+SELECT * 
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 131;
+delete from [dbo].[tblEmployee] where  [EmployeeNumber] = 131 and [DateOfBirth] = '1980-08-01'
+
+select [EmployeeNumber] , count(*) from [dbo].[tblEmployee] group by [EmployeeNumber] having count(*)>1
+
+--Simple Join (Might Use Hash Join if Tables Are Big)
+SELECT * FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+--Narrow Column Selection Helps
+SELECT E.EmployeeNumber, T.Amount
+FROM [dbo].[tblEmployee] AS E 
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+
+-- Helpful indexes (For optimal performance with Nested Loops)
+CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
+CREATE NONCLUSTERED INDEX idx_Transaction_EmployeeNumber ON dbo.tblTransaction(EmployeeNumber);
+
 
 
 
