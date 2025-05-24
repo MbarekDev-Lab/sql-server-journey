@@ -3511,6 +3511,11 @@ SET STATISTICS IO ON;
 	LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
 	WHERE D.Department = 'HR';
 SET STATISTICS IO OFF;
+GO
+
+SET STATISTICS IO ON;
+SET STATISTICS TIME ON;
+GO
 
 GO
 SET STATISTICS IO ON;
@@ -3518,6 +3523,25 @@ SET STATISTICS IO ON;
 	Table 'tblEmployee'. Scan count 1, logical reads 10, physical reads 1, page server reads 0, read-ahead reads 8, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 	Table 'tblDepartment'. Scan count 0, logical reads 3, physical reads 2, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
 GO
+
+--256 SET SHOWPLAN_ALL and Client Statistics 
+SET SHOWPLAN_ALL OFF; --Returns detailed execution plan in tabular format without executing.
+SET SHOWPLAN_TEXT ON; --Returns the execution plan as plain text (legacy format)
+GO
+
+SET SHOWPLAN_ALL OFF;
+SET SHOWPLAN_TEXT OFF;
+GO
+
+SELECT D.Department,  D.DepartmentHead, E.EmployeeNumber,  
+       E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E 
+    ON D.Department = E.Department
+WHERE D.Department = 'HR';
+
+
+
 
 
 
