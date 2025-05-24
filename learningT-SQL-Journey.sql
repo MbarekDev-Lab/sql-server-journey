@@ -3393,6 +3393,21 @@ WHERE E.EmployeeNumber BETWEEN 340 AND 349 --SQL Server can perform a range seek
 --Design your indexes to support the most common SARGable predicates.
 --Use covering indexes if you’re selecting multiple columns.
 
+-- 252 A more advanced query plan
+SELECT 
+    EmployeeNumber, 
+    Amount, 
+    DateOfTransaction,
+    SUM([Amount]) OVER(PARTITION BY EmployeeNumber ORDER BY DateOfTransaction) AS RunningTotal
+FROM 
+    [dbo].[tblTransaction];
+
+
+
+
+
+
+
 
 
 
