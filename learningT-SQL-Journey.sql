@@ -3445,6 +3445,52 @@ END;
 EXEC procTransactionBig 1;
 EXEC procTransactionBig 132;
 
+--254  Hints
+--Hints: NOLOCK vs REPEATABLEREAD
+-- Using NOLOCK: allows dirty reads (uncommitted data might be read)
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D WITH (NOLOCK) --WITH (NOLOCK) = fast but unsafe (dirty reads, no locking).
+LEFT merge JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+WHERE D.Department = 'HR';
+
+-- Using REPEATABLEREAD: prevents other transactions from modifying rows during your read
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D WITH (REPEATABLEREAD)--WITH (REPEATABLEREAD) = ensures consistent reads, locks the rows, safer but slower.
+LEFT hash JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+WHERE D.Department = 'HR';
+
+--Dynamic SQL (Unsafe)
+DECLARE @param VARCHAR(1000) = '127';
+DECLARE @sql NVARCHAR(MAX) = N'
+    SELECT * 
+    FROM [dbo].[tblTransaction] AS T
+    WHERE T.EmployeeNumber = ' + @param;
+EXECUTE (@sql); --Risky, This is vulnerable to SQL injection if @param is user-supplied.
+
+-- SQL Injection Example
+DECLARE @parameter VARCHAR(1000) = '127' + CHAR(10) + 'SELECT * from dbo.tblTransaction';
+DECLARE @sql NVARCHAR(MAX) = N'
+    SELECT * 
+    FROM [dbo].[tblTransaction] AS T
+    WHERE T.EmployeeNumber = ' + @parameter;
+EXECUTE (@sql); -- This simulates how attackers inject extra queries using input values. This is dangerous.
+
+--Parameterized Query (Safe)
+DECLARE @param VARCHAR(1000) = '127';
+EXECUTE sys.sp_executesql
+    @statement = N'
+        SELECT * 
+        FROM [dbo].[tblTransaction] AS T
+        WHERE T.EmployeeNumber = @EmployeeNumber;',
+    @params = N'@EmployeeNumber VARCHAR(1000)',
+    @EmployeeNumber = @param;
+--Best Practice: This is the safe, parameterized approach.
+--It avoids injection, allows SQL Server to reuse execution plans, and improves performance.
+
+
+
+
+
 
 
 
