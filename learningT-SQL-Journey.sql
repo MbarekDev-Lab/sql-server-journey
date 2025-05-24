@@ -3393,7 +3393,7 @@ WHERE E.EmployeeNumber BETWEEN 340 AND 349 --SQL Server can perform a range seek
 --Design your indexes to support the most common SARGable predicates.
 --Use covering indexes if you’re selecting multiple columns.
 
--- 252 A more advanced query plan
+-- 252) A more advanced query plan
 SELECT 
     EmployeeNumber, 
     Amount, 
@@ -3403,6 +3403,47 @@ FROM
     [dbo].[tblTransaction];
 
 
+-- 253) plan guides :
+--  Create a new table and copy data into it
+IF OBJECT_ID('dbo.tblTransactionBig', 'U') IS NOT NULL
+    DROP TABLE dbo.tblTransactionBig;
+SELECT * INTO dbo.tblTransactionBig FROM dbo.tblTransaction;
+
+--SELECT *
+--FROM dbo.tblTransaction
+--FROM dbo.tblTransactionBig;
+
+--  Insert synthetic/mass data using a CROSS JOIN
+INSERT INTO dbo.tblTransactionBig (Amount, DateOfTransaction, EmployeeNumber)
+SELECT 
+    T1.Amount, 
+    T2.DateOfTransaction, 
+    1 AS EmployeeNumber
+FROM dbo.tblTransaction AS T1
+CROSS JOIN (
+    SELECT * 
+    FROM dbo.tblTransaction 
+    WHERE EmployeeNumber < 200
+) AS T2;
+
+--  Create a non-clustered index on EmployeeNumber for efficient filtering
+CREATE NONCLUSTERED INDEX idx_tblTransactionBig 
+ON dbo.tblTransactionBig (EmployeeNumber);
+
+--  Create a stored procedure with RECOMPILE to optimize for the specific input
+CREATE PROCEDURE procTransactionBig @EmployeeNumber INT
+WITH RECOMPILE
+AS
+BEGIN
+    SELECT *
+    FROM tblTransactionBig AS T
+    LEFT JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+    WHERE T.EmployeeNumber = @EmployeeNumber;
+END;
+
+--  Execute the procedure with different parameter values
+EXEC procTransactionBig 1;
+EXEC procTransactionBig 132;
 
 
 
