@@ -3328,7 +3328,8 @@ LEFT JOIN [dbo].[tblTransactionNoIndex] AS T ON E.EmployeeNumber = T.EmployeeNum
 SELECT E.EmployeeNumber, T.Amount
 FROM [dbo].[tblEmployee] AS E
 JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber 
-OPTION (MERGE JOIN);  -- OR OPTION (HASH JOIN) OR OPTION (LOOP JOIN)
+ OPTION (MERGE JOIN);
+-- OPTION (MERGE JOIN) OR OPTION (HASH JOIN) OR OPTION (LOOP JOIN)
 
 
 
