@@ -3201,8 +3201,9 @@ DROP INDEX idx_tblEmployee_Employee ON dbo.tblEmployee;
 | DROP INDEX                  | Removes the specified index from the table.                               |
 
 
--- Include Client Statistics
+--Include Client Statistics--Hash match:--Nested Loop--Merge Joins--Even bigger savings of time when using a SARG--
 
+-- 49 Include Client Statistics
 SELECT * 
 FROM [dbo].[tblEmployee];
 
@@ -3228,8 +3229,8 @@ SELECT EmployeeFirstName, EmployeeLastName
 FROM dbo.tblEmployee
 WHERE EmployeeNumber = 134;
 
-
--- 50 Hash match: 
+-- 50 Hash match:
+-- A Hash Match Join is used by SQL Server when no useful index exists on the join column(s).
 SELECT *
 FROM [dbo].[tblDepartment] AS D
 LEFT JOIN [dbo].[tblEmployee] AS E
@@ -3246,96 +3247,42 @@ CREATE NONCLUSTERED INDEX idx_Department ON dbo.tblDepartment(Department);
 
 -- On Employee table
 CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
+--These indexes allow SQL Server to perform an Index Seek or Merge Join instead of a hash join.
 
 --Update Statistics (Optional can be Helpful)
 UPDATE STATISTICS dbo.tblDepartment;
 UPDATE STATISTICS dbo.tblEmployee;
 
---Filtering before joining can also help:
--- If you want only employees in departments
+-- Filtering before joining can also help if you want only employees in departments
 SELECT D.Department, D.DepartmentHead,E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
-FROM dbo.tblDepartment AS D JOIN dbo.tblEmployee AS E
-ON D.Department = E.Department;
+FROM dbo.tblDepartment AS D JOIN dbo.tblEmployee AS E ON D.Department = E.Department;
 
---Nested Loop (A Nested Loop Join works by looping over one input (usually the smaller table or a filtered result) and looking up matches in the other.)
+
+-- 51 Nested Loop Join :
+-- Indexed + Filtered — Great for Nested Loops
 SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
 FROM [dbo].[tblDepartment] AS D
 LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
-WHERE D.Department = 'HR'; -- nested loop
+WHERE D.Department = 'HR';
 
-SELECT * 
-FROM [dbo].[tblEmployee] AS E
-LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
-
-SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 131;
-delete from [dbo].[tblEmployee] where  [EmployeeNumber] = 131 and [DateOfBirth] = '1980-08-01'
-
-select [EmployeeNumber] , count(*) from [dbo].[tblEmployee] group by [EmployeeNumber] having count(*)>1
+--Nested Loop because WHERE D.Department = 'HR' reduces the outer input to one or a few rows.
+--If tblEmployee.Department is indexed, SQL Server will seek into it, making this join extremely fast.
 
 --Simple Join (Might Use Hash Join if Tables Are Big)
 SELECT * FROM [dbo].[tblEmployee] AS E
 LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+--If there are no filters and the tables are large without good indexing, SQL Server might still default to a Hash Match Join.
 
 --Narrow Column Selection Helps
 SELECT E.EmployeeNumber, T.Amount
-FROM [dbo].[tblEmployee] AS E 
+FROM [dbo].[tblEmployee] AS E
 LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
+--This version selects only relevant columns, and if T.EmployeeNumber is indexed, the optimizer will favor a Nested Loop Join when:
 
--- Helpful indexes (For optimal performance with Nested Loops)
+--For optimal performance with Nested Loops:
+-- Helpful indexes
 CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
 CREATE NONCLUSTERED INDEX idx_Transaction_EmployeeNumber ON dbo.tblTransaction(EmployeeNumber);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
