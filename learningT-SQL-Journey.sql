@@ -3265,8 +3265,12 @@ FROM [dbo].[tblDepartment] AS D
 LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
 WHERE D.Department = 'HR';
 
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 131 
 --Nested Loop because WHERE D.Department = 'HR' reduces the outer input to one or a few rows.
 --If tblEmployee.Department is indexed, SQL Server will seek into it, making this join extremely fast.
+
+--To check
+SELECT [EmployeeNumber], COUNT(*) FROM [dbo].[tblEmployee] GROUP BY [EmployeeNumber] HAVING COUNT(*)>1
 
 --Simple Join (Might Use Hash Join if Tables Are Big)
 SELECT * FROM [dbo].[tblEmployee] AS E
@@ -3283,6 +3287,8 @@ LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber;
 -- Helpful indexes
 CREATE NONCLUSTERED INDEX idx_Employee_Department ON dbo.tblEmployee(Department);
 CREATE NONCLUSTERED INDEX idx_Transaction_EmployeeNumber ON dbo.tblTransaction(EmployeeNumber);
+
+
 
 
 
