@@ -3487,15 +3487,37 @@ EXECUTE sys.sp_executesql
 --Best Practice: This is the safe, parameterized approach.
 --It avoids injection, allows SQL Server to reuse execution plans, and improves performance.
 
+--SET STATISTICS IO ON
+SELECT D.Department, D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName,E.EmployeeLastName
+FROM [dbo].[tblDepartment] AS D
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+WHERE D.Department = 'HR';
 
+SET STATISTICS IO ON;
+Table 'tblEmployee'. Scan count 1, logical reads 20, physical reads 0, read-ahead reads 4.
+Table 'tblDepartment'. Scan count 1, logical reads 2, physical reads 0, read-ahead reads 0.
 
+--A non-clustered index on Department column can reduce reads.
+CREATE NONCLUSTERED INDEX idx_tblDepartment_Department ON dbo.tblDepartment (Department);
 
+--Covering Index on tblEmployee (optional, if heavily queried)
+CREATE NONCLUSTERED INDEX idx_tblEmployee_Department ON dbo.tblEmployee (Department)
+INCLUDE (EmployeeNumber, EmployeeFirstName, EmployeeLastName);
+SET STATISTICS IO OFF;
 
+SET STATISTICS IO ON;
+	SELECT D.Department,  D.DepartmentHead, E.EmployeeNumber,  E.EmployeeFirstName, E.EmployeeLastName
+	FROM [dbo].[tblDepartment] AS D
+	LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
+	WHERE D.Department = 'HR';
+SET STATISTICS IO OFF;
 
-
-
-
-
+GO
+SET STATISTICS IO ON;
+--(227 rows affected) This tells SQL Server to return I/O statistics after query execution. Example output:
+	Table 'tblEmployee'. Scan count 1, logical reads 10, physical reads 1, page server reads 0, read-ahead reads 8, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+	Table 'tblDepartment'. Scan count 0, logical reads 3, physical reads 2, page server reads 0, read-ahead reads 0, page server read-ahead reads 0, lob logical reads 0, lob physical reads 0, lob page server reads 0, lob read-ahead reads 0, lob page server read-ahead reads 0.
+GO
 
 
 
