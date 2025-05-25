@@ -3563,6 +3563,45 @@ JOIN sys.indexes AS i
 WHERE database_id = db_id()                       -- Limit to current database
 
 
+--Creates a much larger table by doing a Cartesian product of tblTransaction with itself.
+SELECT T.*
+INTO dbo.tblTransactionBigger
+FROM [dbo].[tblTransaction] AS T
+CROSS JOIN [dbo].[tblTransaction] AS T2
+
+SELECT  * FROM dbo.tblTransactionBigger
+WHERE [EmployeeNumber] =127
+--If no supporting index exists on EmployeeNumber, 
+--SQL Server logs this internally as a potential "missing index" optimization opportunity.
+
+-- Query the Missing Index DMVs
+SELECT * FROM sys.dm_db_missing_index_details
+
+SELECT  mig.*, statement AS table_name, column_id, column_name, column_usage
+FROM sys.dm_db_missing_index_details AS mid
+CROSS APPLY sys.dm_db_missing_index_columns(mid.index_handle)
+INNER JOIN sys.dm_db_missing_index_groups AS mig ON mig.index_handle = mid.index_handle
+WHERE database_id = db_id()
+ORDER BY column_id
+
+--Clean Up
+DROP TABLE dbo.tblTransactionBigger
+
+--Automatically Generate the Suggested Index?
+--template query to generate CREATE INDEX statements based on DMV data:
+SELECT 'CREATE NONCLUSTERED INDEX IDX_' + OBJECT_NAME(mid.object_id) + '_' + 
+  REPLACE(REPLACE(REPLACE(ISNULL(equality_columns,''),', ','_'),'[',''),']','') AS CreateIndexScript,
+  'ON ' + mid.statement + ' (' + ISNULL(equality_columns,'') + ')' + 
+  ISNULL(' INCLUDE (' + included_columns + ')', '') AS IndexScript
+FROM sys.dm_db_missing_index_details mid
+JOIN sys.dm_db_missing_index_groups mig ON mid.index_handle = mig.index_handle
+JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.group_handle
+WHERE database_id = DB_ID()
+ORDER BY migs.avg_total_user_cost DESC
+
+
+
+
 
 
 
