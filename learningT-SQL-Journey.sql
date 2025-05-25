@@ -3599,6 +3599,40 @@ JOIN sys.dm_db_missing_index_group_stats migs ON mig.index_group_handle = migs.g
 WHERE database_id = DB_ID()
 ORDER BY migs.avg_total_user_cost DESC
 
+--260 sys.dm_db_index_physical_stats
+
+SELECT * FROM sys.dm_db_index_physical_stats(
+    DB_ID(N'70-461'), 
+    OBJECT_ID(N'dbo.tblEmployee'), 
+    NULL, 
+    NULL, 
+    'DETAILED'
+);--to inspect the physical health and structure of indexes on the tblEmployee table
+
+--Parameters 
+--sys.dm_db_index_physical_stats (
+--    database_id,       -- ID of your database
+--    object_id,         -- ID of the object (table or view)
+--    index_id,          -- Specific index to target (NULL = all indexes)
+--    partition_number,  -- Partition to inspect (NULL = all partitions)
+--    mode               -- Sampling mode: LIMITED | SAMPLED | DETAILED
+--)
+
+-- Sample Use Case: Find Heavily Fragmented Indexes
+SELECT OBJECT_NAME(ips.object_id) AS TableName,
+    i.name AS IndexName,
+    ips.index_type_desc,
+    ips.avg_fragmentation_in_percent,
+    ips.page_count
+FROM sys.dm_db_index_physical_stats(
+        DB_ID(N'70-461'), 
+        OBJECT_ID(N'dbo.tblEmployee'), 
+        NULL, NULL, 'DETAILED') AS ips
+JOIN sys.indexes AS i
+    ON ips.object_id = i.object_id AND ips.index_id = i.index_id
+WHERE ips.avg_fragmentation_in_percent > 10
+ORDER BY ips.avg_fragmentation_in_percent DESC;
+
 
 
 
