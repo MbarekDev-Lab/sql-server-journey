@@ -3673,6 +3673,71 @@ FROM tblEmployee AS E
 LEFT JOIN tblTransaction AS T ON T.EmployeeNumber = E.EmployeeNumber
 WHERE E.EmployeeNumber BETWEEN 120 AND 299;
 
+-- 265 impact of scalar UDFs
+GO
+-- scalar valued UDF that returns the total transaction amount for a given EmployeeNumber.
+CREATE FUNCTION fnc_TransactionTotal (@intEmployee as int)
+RETURNS money
+
+AS
+
+BEGIN
+	DECLARE @TotalAmount AS MONEY 
+	SELECT @TotalAmount = SUM(Amount)
+	FROM [dbo].[tblTransaction] WHERE [EmployeeNumber] = @intEmployee
+	RETURN @TotalAmount  
+END
+
+SELECT dbo.fnc_TransactionTotal(134)
+
+SELECT * FROM [dbo].[tblTransaction] WHERE [EmployeeNumber] = 134
+
+-- scalar-valued UDF Looks elegant, but scalar UDFs are executed row-by-row.
+--This can be slow and unscalable (CPU-intensive, poor parallelism, no optimization in execution plan).
+SELECT [EmployeeNumber], dbo.fnc_TransactionTotal([EmployeeNumber]) FROM [dbo].[tblEmployee]
+
+--Set-Based Join with GROUP BY
+SELECT E.[EmployeeNumber], SUM(Amount) AS TotalAmount
+FROM [dbo].[tblEmployee] AS E
+LEFT JOIN [dbo].[tblTransaction] AS T ON E.EmployeeNumber = T.EmployeeNumber
+GROUP BY E.[EmployeeNumber]
+--Much faster — processes all rows at once (set-based logic).
+--Uses joins + grouping for performance (Recommended for production.)
+
+--Correlated Subquery
+SELECT E.EmployeeNumber, (SELECT SUM(Amount) FROM tblTransaction AS T
+        WHERE T.EmployeeNumber = E.EmployeeNumber) AS TotalAmount
+FROM dbo.tblEmployee AS E
+--Similar to scalar UDF, but embedded inline , Generally slower than joins for large datasets.
+
+--Table-Valued Function with APPLY
+CREATE FUNCTION fnc_TransactionAll (@intEmployee AS int)
+RETURNS @returntable TABLE (Amount SMALLMONEY)
+AS
+BEGIN
+    INSERT @returntable
+    SELECT Amount
+    FROM dbo.tblTransaction
+    WHERE EmployeeNumber = @intEmployee
+    RETURN
+END
+
+SELECT EmployeeNumber, SUM(T.Amount) AS TotalAmount
+FROM dbo.tblEmployee AS E
+OUTER APPLY fnc_TransactionAll(EmployeeNumber) AS T
+GROUP BY EmployeeNumber
+
+--Avoid scalar UDFs when working with large datasets.
+--Prefer set-based operations with joins and aggregation.
+--Use TVFs with APPLY only if business logic demands procedural encapsulation.
+
+
+
+
+
+
+
+
 
 
 
