@@ -3633,6 +3633,33 @@ JOIN sys.indexes AS i
 WHERE ips.avg_fragmentation_in_percent > 10
 ORDER BY ips.avg_fragmentation_in_percent DESC;
 
+--Evaluate the use of row-based operations vs. set-based operations
+--When to use cursors:
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 123
+SELECT * FROM [dbo].[tblEmployee] WHERE [EmployeeNumber] = 124
+
+DECLARE @EmployeeID INT
+DECLARE csr CURSOR FOR 
+	SELECT EmployeeNumber FROM [dbo].[tblEmployee] -- Avoid SELECT * in Cursors?
+	WHERE EmployeeNumber BETWEEN 120 AND 299
+
+OPEN  csr 
+FETCH NEXT FROM csr INTO @EmployeeID
+WHILE @@FETCH_STATUS = 0
+
+BEGIN
+	SELECT * FROM [dbo].[tblTransaction] WHERE EmployeeNumber =  @EmployeeID
+	FETCH NEXT FROM csr INTO  @EmployeeID
+END
+CLOSE csr
+DEALLOCATE csr
+
+
+
+
+
+
+
 
 
 
