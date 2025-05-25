@@ -3514,7 +3514,7 @@ SET STATISTICS IO OFF;
 GO
 
 SET STATISTICS IO ON;
-SET STATISTICS TIME ON;
+
 GO
 
 GO
@@ -3525,7 +3525,7 @@ SET STATISTICS IO ON;
 GO
 
 --256 SET SHOWPLAN_ALL and Client Statistics 
-SET SHOWPLAN_ALL OFF; --Returns detailed execution plan in tabular format without executing.
+SET SHOWPLAN_ALL ON; --Returns detailed execution plan in tabular format without executing.
 SET SHOWPLAN_TEXT ON; --Returns the execution plan as plain text (legacy format)
 GO
 
@@ -3533,28 +3533,34 @@ SET SHOWPLAN_ALL OFF;
 SET SHOWPLAN_TEXT OFF;
 GO
 
-SELECT D.Department,  D.DepartmentHead, E.EmployeeNumber,  
-       E.EmployeeFirstName, E.EmployeeLastName
+SET STATISTICS TIME ON; --CPU time = 0 ms, elapsed time = 11 ms. compile , Execution 
+GO
+
+SELECT D.Department,  D.DepartmentHead, E.EmployeeNumber, E.EmployeeFirstName, E.EmployeeLastName
 FROM [dbo].[tblDepartment] AS D
-LEFT JOIN [dbo].[tblEmployee] AS E 
-    ON D.Department = E.Department
+LEFT JOIN [dbo].[tblEmployee] AS E ON D.Department = E.Department
 WHERE D.Department = 'HR';
 
+SET STATISTICS TIME OFF;
+GO
 
+--DMVs (Index Related Dynamic Management Views and Functions)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+SELECT DB_NAME (database_id) AS [Database Name] 
+, OBJECT_NAME(ddius.object_id) AS [Table Name]
+,    ddius.* 
+ FROM sys.dm_db_index_usage_stats AS ddius
+ JOIN sys.indexes AS i  ON ddius.object_id = i.object_id  AND ddius.index_id = i.index_id
+ WHERE database_id = db_id()
+ ------------------------------------
+SELECT db_name(database_id) AS [Database Name],      -- Name of the database
+    object_name(ddius.object_id) AS [Table Name],    -- Name of the table the index is on
+    i.name AS [Index Name],                          -- Name of the index
+    ddius.*                                          -- All raw usage statistics
+FROM sys.dm_db_index_usage_stats AS ddius            -- DMV: index usage stats
+JOIN sys.indexes AS i                                
+    ON ddius.object_id = i.object_id AND ddius.index_id = i.index_id -- System catalog: index metadata
+WHERE database_id = db_id()                       -- Limit to current database
 
 
 
