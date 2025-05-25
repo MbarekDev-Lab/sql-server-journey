@@ -3654,6 +3654,26 @@ END
 CLOSE csr
 DEALLOCATE csr
 
+--Alternatives : as RIGHT JOIN
+SELECT T.* FROM tblTransaction AS T
+RIGHT JOIN tblEmployee AS E ON T.EmployeeNumber = E.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 120 AND 299 AND T.EmployeeNumber IS NOT NULL;
+
+--OR INNER JOIN instead
+
+SELECT T.*
+FROM tblTransaction AS T
+INNER JOIN tblEmployee AS E  ON T.EmployeeNumber = E.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 120 AND 299;
+
+-- OR LEFT JOIN without Transactions
+
+SELECT E.EmployeeNumber, T.*
+FROM tblEmployee AS E
+LEFT JOIN tblTransaction AS T ON T.EmployeeNumber = E.EmployeeNumber
+WHERE E.EmployeeNumber BETWEEN 120 AND 299;
+
+
 
 
 
